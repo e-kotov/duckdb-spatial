@@ -1,0 +1,33 @@
+name: Spatial default-platform shutdown controls
+
+# Validate the default non-Windows CMake/build path with the original release
+# build and Spatial tests. The GNU Windows runtime source replacement and link
+# map options are unset. This calls only the build/test/artifact workflow;
+# deployment and signing are separate workflows and are not invoked here.
+on:
+  push:
+    branches: [test/windows-shutdown-platforms-20261107]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  platform-controls:
+    name: Linux and native macOS release tests
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@969bc76276acec1c0a3922ff500d2ec3a1a3b037
+    with:
+      extension_name: spatial
+      duckdb_version: d54cbbe3df17e8e5ce68312f483b4155836112aa
+      ci_tools_version: 969bc76276acec1c0a3922ff500d2ec3a1a3b037
+      vcpkg_commit: cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3
+      override_repository: e-kotov/duckdb-spatial
+      override_ref: ${{ github.sha }}
+      reduced_ci_mode: disabled
+      exclude_archs: 'linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads'
+      build_type: release
+      build_duckdb_shell: true
+      skip_tests: false
+      extensions_test_selection: regular
+      artifact_postfix: '-shutdown-default-path'
