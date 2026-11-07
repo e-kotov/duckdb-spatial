@@ -1,0 +1,164 @@
+name: Spatial retained-artifact provenance recheck
+
+# Reuse the exact binaries from the completed strict Linux/macOS test jobs.
+# No compiler, production source, original test, or recorded outcome is changed.
+on:
+  push:
+    branches: [fix/platform-provenance-checks-20261107]
+    paths:
+      - '.github/workflows/platform-provenance-recheck.yml'
+      - 'scripts/windows-shutdown/verify_platform_artifact.py'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  provenance:
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    name: Recheck retained ${{ matrix.platform }} binary on its native runner
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-24.04
+            artifact_id: '13580016065'
+            build_job_id: '128434333870'
+            artifact_bytes: '149408082'
+            artifact_sha256: f8ba0d889f3c76776ea86a13c0035bf57f61c6ca9d33420d5d1c4d0188b05523
+            extension_sha256: 2ba85e029d132b38e6d6f3131415de33d868c1c9e3513bdbf2a0b19f203b7f50
+            support_path: test-support/2a0e1d475e7dfa31/test-support.tar.gz
+            support_sha256: 54aed6d9caf8c79b8d8fb710c6cb956887fccf749fdeb24bf1ad1d3520164576
+          - platform: osx_arm64
+            runner: macos-15
+            artifact_id: '13581015886'
+            build_job_id: '128443679877'
+            artifact_bytes: '105179032'
+            artifact_sha256: 66e3d00e2eb6cdee8ffacda82bf1bd7c0a113fece96d5e9860c6dfcfb4e503a8
+            extension_sha256: 1aaa8c7c737cbe33c6cda75ea9fdaf2ad72bd8a2eda8374599af01869a49ddde
+            support_path: test-support/339ac17322f73d07/test-support.tar.gz
+            support_sha256: 10990722cb77cbcb7daa6c1947266abcd6145003f7a65fae674bb78e2a83a358
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - name: Check out the corrected provenance harness
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          submodules: false
+
+      - name: Check out the exact sources used by the completed test jobs
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: e-kotov/duckdb-spatial
+          ref: e07a59560b98171872655092670bebf352b08387
+          path: tested-source
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Download the pinned artifact from the original strict run
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          repository: e-kotov/duckdb-spatial
+          run-id: '42382937642'
+          artifact-ids: ${{ matrix.artifact_id }}
+          github-token: ${{ github.token }}
+          path: build/platform-artifact
+          merge-multiple: true
+
+      - name: Verify the original job, source identity, artifact and exact input bytes
+        env:
+          PROVENANCE_GITHUB_TOKEN: ${{ github.token }}
+          PROVENANCE_PLATFORM: ${{ matrix.platform }}
+          PROVENANCE_ARTIFACT_ID: ${{ matrix.artifact_id }}
+          PROVENANCE_BUILD_JOB_ID: ${{ matrix.build_job_id }}
+          PROVENANCE_ARTIFACT_BYTES: ${{ matrix.artifact_bytes }}
+          PROVENANCE_ARTIFACT_SHA256: ${{ matrix.artifact_sha256 }}
+          PROVENANCE_EXTENSION_SHA256: ${{ matrix.extension_sha256 }}
+          PROVENANCE_SUPPORT_PATH: ${{ matrix.support_path }}
+          PROVENANCE_SUPPORT_SHA256: ${{ matrix.support_sha256 }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, pathlib, subprocess, urllib.request
+          repo = 'e-kotov/duckdb-spatial'
+          source_run = 42382937642
+          source_commit = 'e07a59560b98171872655092670bebf352b08387'
+          artifact_id = int(os.environ['PROVENANCE_ARTIFACT_ID'])
+          build_job_id = int(os.environ['PROVENANCE_BUILD_JOB_ID'])
+          platform = os.environ['PROVENANCE_PLATFORM']
+          def require(condition, message):
+              if not condition:
+                  raise RuntimeError(message)
+          def read_api(path):
+              request = urllib.request.Request(
+                  'https://api.github.com/repos/' + repo + path,
+                  headers={'Authorization': 'Bearer ' + os.environ['PROVENANCE_GITHUB_TOKEN'],
+                           'Accept': 'application/vnd.github+json',
+                           'X-GitHub-Api-Version': '2022-11-28'})
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.load(response)
+          artifact = read_api('/actions/artifacts/' + str(artifact_id))
+          build = read_api('/actions/jobs/' + str(build_job_id))
+          require(artifact['id'] == artifact_id and not artifact['expired'], 'Artifact identity or retention mismatch')
+          require(artifact['name'] == 'spatial-v2.0.0-extension-' + platform + '-shutdown-strict-default-path', 'Artifact name mismatch')
+          require(artifact['workflow_run']['id'] == source_run and artifact['workflow_run']['head_sha'] == source_commit, 'Artifact source mismatch')
+          require(artifact['digest'] == 'sha256:' + os.environ['PROVENANCE_ARTIFACT_SHA256'], 'Artifact digest mismatch')
+          require(artifact['size_in_bytes'] == int(os.environ['PROVENANCE_ARTIFACT_BYTES']), 'Artifact size mismatch')
+          require(build['id'] == build_job_id and build['run_id'] == source_run and build['conclusion'] == 'success', 'Original native build/test job did not succeed')
+          head = subprocess.check_output(['git', '-C', 'tested-source', 'rev-parse', 'HEAD'], text=True).strip()
+          require(head == source_commit, 'Test sources differ from the recorded build')
+          root = pathlib.Path('build/platform-artifact').resolve()
+          files = {}
+          for relative, expected in (
+              ('spatial.duckdb_extension', os.environ['PROVENANCE_EXTENSION_SHA256']),
+              (os.environ['PROVENANCE_SUPPORT_PATH'], os.environ['PROVENANCE_SUPPORT_SHA256']),
+          ):
+              path = (root / relative).resolve(strict=True)
+              require(path.is_relative_to(root) and path.is_file(), 'Artifact file escaped its directory')
+              with path.open('rb') as stream:
+                  actual = hashlib.file_digest(stream, 'sha256').hexdigest()
+              require(actual == expected, 'Retained artifact bytes differ: ' + relative)
+              files[relative] = {'sha256': actual, 'bytes': path.stat().st_size}
+          output = pathlib.Path('build/platform-provenance')
+          output.mkdir(parents=True, exist_ok=True)
+          record = {
+              'source_repository': repo, 'source_run': source_run, 'source_commit': head,
+              'source_build_job': build_job_id, 'source_build_conclusion': build['conclusion'],
+              'artifact_id': artifact_id, 'artifact_name': artifact['name'],
+              'artifact_sha256': artifact['digest'], 'artifact_bytes': artifact['size_in_bytes'],
+              'files': files, 'harness_commit': os.environ['GITHUB_SHA'],
+              'verification_run': os.environ['GITHUB_RUN_ID'], 'platform': platform,
+              'original_suite_rerun': False,
+          }
+          (output / 'input-provenance.json').write_text(json.dumps(record, indent=2) + '\n')
+          print(json.dumps(record, indent=2))
+          PY
+
+      - name: Verify complete test registration, the exact loaded binary and normal exit
+        run: >-
+          python scripts/windows-shutdown/verify_platform_artifact.py
+          --artifact build/platform-artifact
+          --platform ${{ matrix.platform }}
+          --source tested-source
+          --output build/platform-provenance
+
+      - name: Preserve corrected verification and the real process outcomes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: spatial-${{ matrix.platform }}-retained-provenance-${{ github.run_id }}
+          path: |
+            build/platform-provenance/*.json
+            build/platform-provenance/*.log
+            build/platform-provenance/*.sql
+            scripts/windows-shutdown/verify_platform_artifact.py
+            .github/workflows/platform-provenance-recheck.yml
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 90

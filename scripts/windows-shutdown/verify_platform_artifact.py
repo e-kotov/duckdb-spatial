@@ -117,10 +117,12 @@ def verify(args: argparse.Namespace, summary: dict) -> None:
     cache = output / 'extension-cache'
     cache.mkdir()
     quote = lambda path: str(path).replace("'", "''")
+    # The deprecated singular setting prints a warning to CLI stdout. Use the
+    # supported list setting so the provenance stream remains strict JSON.
     sql = ("PRAGMA version;\nPRAGMA platform;\n"
            "SET autoinstall_known_extensions = false;\n"
            "SET autoload_known_extensions = false;\n"
-           f"SET extension_directory = '{quote(cache)}';\n"
+           f"SET extension_directories = ['{quote(cache)}'];\n"
            f"FORCE INSTALL '{quote(extension)}';\nLOAD spatial;\n"
            "SELECT extension_name, loaded, installed, install_path, install_mode, "
            "current_setting('allow_extensions_metadata_mismatch') AS metadata_mismatch_allowed "
