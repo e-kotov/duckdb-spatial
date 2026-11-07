@@ -45,6 +45,10 @@ def canonical(path: str | Path, source_root: Path) -> str:
 
 
 def verified_empty_tests(selected: list[Path], source_root: Path) -> dict[str, dict]:
+    known_path = source_root / KNOWN_EMPTY_TEST
+    if (not known_path.is_file()
+            or canonical(known_path, source_root) not in {canonical(path, source_root) for path in selected}):
+        raise ValueError("The known upstream empty test must remain present and selected")
     verified = {}
     for path in selected:
         if path.stat().st_size != 0:

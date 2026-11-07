@@ -243,7 +243,7 @@ platform checks before preparing a draft PR against the fork. Upstream
 submission and any merge require the user's approval.
 
 Local checks completed during preparation: exact source/hash and generated
-patch verification; Python compilation; twenty-two adverse/positive gate tests;
+patch verification; Python compilation; twenty-three adverse/positive gate tests;
 actual R parsing of both adapted programs; independent code review; YAML
 parsing; action-pin verification; and native Linux compilation of original and
 patched sources with identical executable `.text` bytes. These local checks do

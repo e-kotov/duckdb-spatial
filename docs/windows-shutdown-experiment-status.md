@@ -20,7 +20,7 @@ cleanup, garbage collection and the explicit zero-status quit request.
 | Guarded GCC source | **30 normal exits, 0 quit hangs** / 30 | 5 / 5 pass | Pass | Exit 0; 130 statements pass |
 
 Loaded-DLL hashes, the original diagnostic-input hashes, recorded thread
-counts and source-selection link maps were retained. The two baseline hangs
+counts and source-selection link maps were retained. All baseline hangs
 remain failed software exits. No new native dumps were captured in this
 comparison: the new failures reproduce the original workload and post-quit
 phenotype, but their individual native wait stacks were not remeasured.
@@ -155,6 +155,14 @@ accepting test success. It must not bypass metadata validation or rewrite
 extension binaries. The Windows experiment already uses the correct release
 metadata. Native Linux and macOS controls must also keep the experimental
 runtime source option unset.
+
+[Strict follow-up run 42382937642](https://github.com/e-kotov/duckdb-spatial/actions/runs/42382937642)
+uses `e07a59560b98171872655092670bebf352b08387`. It applies the release
+metadata checks, requires Spatial, rejects missing-requirement skips and
+disables recovery retries. Subsequent artifact checks require all 164 original
+test registrations, exact installed-binary identity, native loader evidence,
+metadata validation and normal process exit. Positive platform results remain
+pending; the earlier green-with-skips run is not substituted for them.
 
 ## Fork deployment boundary
 

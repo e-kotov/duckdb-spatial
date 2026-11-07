@@ -41,6 +41,13 @@ class SQLEventTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unexpected empty SQL test"):
             verified_empty_tests([self.empty, self.other], self.source)
 
+    def test_known_upstream_file_cannot_be_omitted(self):
+        with self.assertRaisesRegex(ValueError, "remain present and selected"):
+            verified_empty_tests([self.other], self.source)
+        self.empty.unlink()
+        with self.assertRaisesRegex(ValueError, "remain present and selected"):
+            verified_empty_tests([self.empty, self.other], self.source)
+
     def test_formerly_empty_file_with_content_requires_an_assertion(self):
         self.empty.write_text("query I\nSELECT 1\n----\n1\n", encoding="utf-8")
         allowed = verified_empty_tests([self.empty], self.source)
