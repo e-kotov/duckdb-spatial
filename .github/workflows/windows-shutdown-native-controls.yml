@@ -1,0 +1,109 @@
+name: Windows shutdown native cleanup controls
+
+# Run the unchanged twelve-case native fixture while the full Spatial builds
+# continue separately. Expected baseline hangs remain recorded software failures.
+on:
+  push:
+    branches: [test/windows-shutdown-native-20261107]
+    paths:
+      - '.github/workflows/windows-shutdown-native-controls.yml'
+      - 'scripts/windows-shutdown/prepare_runtime.py'
+      - 'scripts/windows-shutdown/run_runtime.py'
+      - 'scripts/windows-shutdown/runtime_tests/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-shutdown-native-controls-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-controls:
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    name: Archive, baseline and guarded runtime cleanup contracts
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Check out the unchanged native fixture
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+
+      - name: Preserve workflow, fixture sources and run identity before setup
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = 'build/windows-shutdown-native'
+          New-Item -ItemType Directory -Force -Path "$output/source/runtime_tests" | Out-Null
+          Copy-Item @('scripts/windows-shutdown/prepare_runtime.py', 'scripts/windows-shutdown/run_runtime.py') "$output/source"
+          Copy-Item 'scripts/windows-shutdown/runtime_tests/*' "$output/source/runtime_tests"
+          Copy-Item '.github/workflows/windows-shutdown-native-controls.yml' "$output/source"
+          @{
+            repository = $env:GITHUB_REPOSITORY
+            ref = $env:GITHUB_REF
+            commit = $env:GITHUB_SHA
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            runner_os = $env:RUNNER_OS
+            runner_image = $env:ImageOS
+            runner_image_version = $env:ImageVersion
+          } | ConvertTo-Json | Set-Content "$output/run-context.json"
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Set up the same pinned Rtools 42 compiler
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
+        with:
+          r-version: '4.6.2'
+          rtools-version: '42'
+          update-rtools: true
+
+      - name: Match the existing compiler discovery and verify GCC 10.4
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'C:/rtools42/x86_64-w64-mingw32.static.posix/bin'
+          foreach ($name in @('gcc', 'g++', 'gfortran')) {
+            Copy-Item "$root/$name.exe" "$root/x86_64-w64-mingw32-$name.exe" -Force
+          }
+          $cxx = (Get-Command g++ -ErrorAction Stop).Source
+          $version = & $cxx -dumpfullversion
+          if ($LASTEXITCODE -ne 0 -or $version.Trim() -ne '10.4.0') {
+            throw 'Expected original GCC 10.4.0'
+          }
+          "SPATIAL_TEST_CXX=$cxx" >> $env:GITHUB_ENV
+          @("compiler=$cxx", "version=$version") | Set-Content 'build/windows-shutdown-native/compiler.txt'
+
+      - name: Prepare the immutable inputs and original candidate sources
+        run: |
+          python scripts/windows-shutdown/prepare_runtime.py --output build/windows-shutdown-native/inputs
+          exit $LASTEXITCODE
+
+      - name: Run all twelve native cases including foreign-thread unload
+        timeout-minutes: 10
+        run: |
+          python scripts/windows-shutdown/run_runtime.py `
+            --cxx "$env:SPATIAL_TEST_CXX" `
+            --baseline-runtime-source build/windows-shutdown-native/inputs/baseline.cc `
+            --guarded-runtime-source build/windows-shutdown-native/inputs/guarded.cc `
+            --output-dir build/windows-shutdown-native/native `
+            --expected-compiler-version 10.4.0 `
+            --timeout 10 --cycles 16 --workers 8
+          exit $LASTEXITCODE
+
+      - name: Preserve source, inputs, binaries and every native outcome
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-shutdown-native-controls-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/windows-shutdown-native
+          if-no-files-found: error
+          retention-days: 90
