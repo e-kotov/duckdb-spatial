@@ -45,6 +45,15 @@ serve only as immutable comparison references. Private headers and `thread.c`
 come from the resolved v9 commit
 `acc9b9d9eb63a13d8122cbac4882eb5f4ee2f679`, with individual SHA-256 checks.
 
+The [first native attempt](https://github.com/e-kotov/duckdb-spatial/actions/runs/42387888434)
+stopped before ABI execution because the predefines check rejected Windows CRLF
+line endings. Its raw compiler output contains both required definitions with
+the expected values. The corrected parser normalizes those line endings only,
+retains the original output, and still requires exactly one correct definition
+of each macro. That failed attempt does not establish native preparation or
+any cleanup/storage-order result; its manifest records all 203 tracked installed
+inputs as unchanged.
+
 `manifest.json` records the source identities, generated patch, tools, flags,
 included headers, observed layout, original and replacement objects, archive
 members and before/after hashes. Raw libraries, objects, preprocessed source,

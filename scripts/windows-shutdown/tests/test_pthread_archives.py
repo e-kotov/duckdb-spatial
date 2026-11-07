@@ -84,6 +84,25 @@ class ArchiveIsolationTests(unittest.TestCase):
             with self.subTest(altered=altered), self.assertRaises(ValueError):
                 prep.validate_layout(altered)
 
+    def test_predefines_accept_native_crlf_and_lf(self):
+        lines = (b"#define __SEH__ 1", b"#define __SIZEOF_POINTER__ 8", b"#define _WIN64 1")
+        for newline in (b"\n", b"\r\n"):
+            for final_newline in (b"", newline):
+                with self.subTest(newline=newline, final_newline=final_newline):
+                    prep.validate_predefines(newline.join(lines) + final_newline)
+
+    def test_predefines_reject_wrong_missing_or_ambiguous_macros(self):
+        valid = b"#define __SEH__ 1\r\n#define __SIZEOF_POINTER__ 8\r\n"
+        for altered in (valid.replace(b"__SEH__ 1", b"__SEH__ 0"),
+                        valid.replace(b"__SIZEOF_POINTER__ 8", b"__SIZEOF_POINTER__ 4"),
+                        valid.replace(b"#define __SEH__ 1\r\n", b""),
+                        valid.replace(b"#define __SIZEOF_POINTER__ 8\r\n", b""),
+                        valid.replace(b"__SEH__ 1", b"__SEH__ 10"),
+                        valid + b"#define __SEH__ 1\r\n",
+                        valid + b"#define\t__SIZEOF_POINTER__\t4\r\n"):
+            with self.subTest(altered=altered), self.assertRaises(ValueError):
+                prep.validate_predefines(altered)
+
     def test_patch_rejects_unknown_source(self):
         with self.assertRaises(ValueError):
             prep.reverse_source(b"void _pthread_cleanup_dest(void) {}\n")

@@ -251,6 +251,19 @@ def validate_layout(observed: dict) -> None:
                 f"ABI mismatch: {name} is {observed[name]!r}, expected {expected}")
 
 
+def validate_predefines(data: bytes) -> None:
+    # Windows GCC writes CRLF. Keep the raw command output unchanged, but compare
+    # complete macro definitions after normalizing only that line ending.
+    lines = data.replace(b"\r\n", b"\n").split(b"\n")
+    for name, value, message in (
+        (b"__SEH__", b"1", "Expected SEH exception model"),
+        (b"__SIZEOF_POINTER__", b"8", "Expected x64 pointer ABI"),
+    ):
+        definitions = [line for line in lines
+                       if re.match(rb"#define[ \t]+" + name + rb"(?:[ \t]|$)", line)]
+        require(definitions == [b"#define " + name + b" " + value], message)
+
+
 class Preparation:
     def __init__(self, output: Path):
         self.output = output
@@ -417,8 +430,7 @@ def native_prepare(prep: Preparation, cxx: Path) -> None:
             {"thread.h", "rwlock.h", "misc.h", "winpthread_internal.h"}, "Private include closure changed")
     prep.manifest["installed_public_headers_match_v9_normalized"] = True
     macros = prep.run("compiler-predefines", [tools["gcc"], *flags, "-dM", "-E", "-x", "c", "-"], input_bytes=b"")
-    require(re.search(rb"^#define __SEH__ 1$", macros, re.MULTILINE) is not None, "Expected SEH exception model")
-    require(re.search(rb"^#define __SIZEOF_POINTER__ 8$", macros, re.MULTILINE) is not None, "Expected x64 pointer ABI")
+    validate_predefines(macros)
 
     layout_dir = prep.output / "layout"
     layout_dir.mkdir()
