@@ -1,0 +1,103 @@
+name: Spatial strict default-platform controls
+
+# The earlier default caller supplied a 40-character SHA as DUCKDB_VERSION.
+# That is truncated in the extension's 32-byte version field, and ordinary CI accepts
+# require-spatial skips. Build the same pinned source with its release version
+# and require the unchanged Spatial suite to execute without recovery retries.
+# The GNU Windows source replacement and link-map options remain unset.
+on:
+  push:
+    branches: [test/windows-shutdown-platform-strict-20261107]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Strict Linux and native macOS release tests
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    uses: duckdb/extension-ci-tools/.github/workflows/_extension_distribution.yml@969bc76276acec1c0a3922ff500d2ec3a1a3b037
+    with:
+      extension_name: spatial
+      duckdb_version: v2.0.0
+      ci_tools_version: 969bc76276acec1c0a3922ff500d2ec3a1a3b037
+      vcpkg_commit: cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3
+      override_repository: e-kotov/duckdb-spatial
+      override_ref: ${{ github.sha }}
+      reduced_ci_mode: disabled
+      exclude_archs: 'linux_arm64;linux_amd64_musl;linux_arm64_musl;osx_amd64;windows_amd64;windows_arm64;windows_amd64_mingw;wasm_mvp;wasm_eh;wasm_threads'
+      build_type: release
+      build_duckdb_shell: true
+      skip_tests: false
+      extensions_test_selection: regular
+      artifact_postfix: '-shutdown-strict-default-path'
+      # Assertions only: no production build options or targets are changed.
+      extra_extension_config: |
+        execute_process(COMMAND git -C "${CMAKE_CURRENT_LIST_DIR}/duckdb" rev-parse HEAD
+                        OUTPUT_VARIABLE shutdown_control_head
+                        OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+        execute_process(COMMAND git -C "${CMAKE_CURRENT_LIST_DIR}/duckdb" rev-parse "refs/tags/v2.0.0^{commit}"
+                        OUTPUT_VARIABLE shutdown_control_tag
+                        OUTPUT_STRIP_TRAILING_WHITESPACE COMMAND_ERROR_IS_FATAL ANY)
+        if(NOT "${shutdown_control_head}" STREQUAL "d54cbbe3df17e8e5ce68312f483b4155836112aa"
+           OR NOT "${shutdown_control_tag}" STREQUAL "d54cbbe3df17e8e5ce68312f483b4155836112aa")
+          message(FATAL_ERROR "Strict platform controls require the recorded v2.0.0 source commit")
+        endif()
+        if(NOT "${SPATIAL_MINGW_TLS_ATEXIT_SOURCE}" STREQUAL ""
+           OR NOT "${SPATIAL_MINGW_LINK_MAP}" STREQUAL "")
+          message(FATAL_ERROR "Default platform controls require empty runtime experiment options")
+        endif()
+        message(STATUS "Strict platform source and v2.0.0 tag verified: ${shutdown_control_head}")
+      test_config: >-
+        {"test_env_variables":{"T":"--batch-size 1 --batch-timeout 300 --stabilize-tests --max-retries 0 --fail-require-skip --test-flags=\"--require spatial\" \"test/*\""}}
+
+  provenance:
+    name: Verify produced ${{ matrix.platform }} binary and normal exit
+    needs: build
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux_amd64
+            runner: ubuntu-24.04
+          - platform: osx_arm64
+            runner: macos-15
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    steps:
+      - name: Check out the exact tested Spatial sources
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Download this run's built extension and original test support
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: spatial-v2.0.0-extension-${{ matrix.platform }}-shutdown-strict-default-path
+          path: build/platform-artifact
+
+      - name: Verify every registered test and the exact loaded binary
+        run: >-
+          python scripts/windows-shutdown/verify_platform_artifact.py
+          --artifact build/platform-artifact
+          --platform ${{ matrix.platform }}
+          --output build/platform-provenance
+
+      - name: Preserve provenance, loader trace, and real process outcome
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: spatial-${{ matrix.platform }}-strict-provenance-${{ github.run_id }}
+          path: |
+            build/platform-provenance/summary.json
+            build/platform-provenance/*.log
+            build/platform-provenance/*.sql
+          if-no-files-found: error
+          retention-days: 90
