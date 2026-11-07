@@ -1,0 +1,2100 @@
+{
+  "run_id": 42398571027,
+  "artifact_id": 13584960803,
+  "commit": "bf3256b770c8a5d7924a2eb97a0ce085ec258071",
+  "errors": [],
+  "original_evidence_modified": false,
+  "windows_executables_run_by_auditor": false,
+  "spatial_workload_assessed": false,
+  "families": {
+    "original": {
+      "native": {
+        "assessment": {
+          "valid": true,
+          "original_gates": {
+            "checks": {
+              "complete_mechanism_and_cleanup_matrix": true,
+              "fixture_expectations_met": true,
+              "all_three_link_proofs": true,
+              "declared_complete": true,
+              "clean_exit_archive_unload": true,
+              "clean_exit_baseline_unload": true,
+              "clean_exit_guarded_unload": true,
+              "clean_exit_archive_foreign-unload": true,
+              "clean_exit_baseline_foreign-unload": true,
+              "clean_exit_guarded_foreign-unload": true,
+              "clean_exit_archive_main-exit": true,
+              "clean_exit_baseline_main-exit": true,
+              "clean_exit_guarded_main-exit": true,
+              "hang_preserved_as_failure_archive": true,
+              "hang_preserved_as_failure_baseline": true,
+              "clean_exit_guarded_abandoned-reader": true
+            },
+            "valid": true
+          },
+          "cases": [
+            {
+              "gcc_arm": "archive",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "abandoned-reader",
+              "software_exit_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "abandoned-reader",
+              "software_exit_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "abandoned-reader",
+              "software_exit_passed": true
+            }
+          ],
+          "normal_exits": 10,
+          "deliberate_failed_exits": 2
+        },
+        "links": {
+          "archive": {
+            "binary_sha256": "dd0e01e63147ffc8e6974006718db3e23c06c5f7cc2bdea6de4d8bd35f7f5af3",
+            "map_sha256": "4bb9495327f23e0af650e2f86d2995ae47859060e03d2b2ea900a220bf9e42e2",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          },
+          "baseline": {
+            "binary_sha256": "a83396c328bffe41328c5f5d8f94789d82e79b488160737c646841994b5b2886",
+            "map_sha256": "9986bb43dcbc3ec7186dcd7cd2d8f3396afdf8e9f66bd959dc283f3c12e3cf21",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          },
+          "guarded": {
+            "binary_sha256": "be25933ce49d10d00eb0539190541e9bd7ea937bca0c82d2153c907e533ef00e",
+            "map_sha256": "94a025b3577175d0fa99f0b1fbb0484c6c869f7d9712a263d987111737a0ec22",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          }
+        },
+        "source_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\fixture.cpp": "5d8a8ad717cbb9efc10e05566c267e2aeb02616e0632f2fadce8a17edce1e92d",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\host.c": "35d80e950c588b4dcfb438f4a007bbd594191c83f8603ac550f79a685368928c",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\fixture.h": "19cd660f4e31d1f1dabeedbe277e8120a36baf9b9b3fb720af95e17ab3839a11",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\baseline.cc": "4c786915c7e1f894c81409367dbab11e69f93f233a03da7ff24e692a9b9c3cc4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\guarded.cc": "6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_runtime.py": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\pthread_provenance.py": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf"
+        },
+        "retained_binary_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\original\\runtime-host.exe": "a878ca264374659a6de96b49af0f1420507a900a9d13127c6c66a3d149e65e81",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\original\\runtime-archive.dll": "dd0e01e63147ffc8e6974006718db3e23c06c5f7cc2bdea6de4d8bd35f7f5af3",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\original\\runtime-baseline.dll": "a83396c328bffe41328c5f5d8f94789d82e79b488160737c646841994b5b2886",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\original\\runtime-guarded.dll": "be25933ce49d10d00eb0539190541e9bd7ea937bca0c82d2153c907e533ef00e"
+        }
+      },
+      "ordering": {
+        "assessment": {
+          "valid": true,
+          "expected_order": "storage-first",
+          "cases": [
+            {
+              "gcc_arm": "archive",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": false
+            }
+          ],
+          "storage_lifetime_contract_passed": false
+        },
+        "links": {
+          "archive": {
+            "binary_sha256": "f851d44a6eb1f193c76c893fbaacc45e6e01d8a02ba9e2c8549a8f9eaf4ee8eb",
+            "map_sha256": "38f36f38ea3e44233b489f156a9d4839c82e3fab63086ac24d6de6177e8add7b",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          },
+          "baseline": {
+            "binary_sha256": "81d01136c7bb7368d38d167407a999e707326cca9fa578f1e3826d46706735c6",
+            "map_sha256": "8b74e63d28b35bf1a331fc78c2246b6af41b47d1bc977017d6724ac3a8e7226d",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          },
+          "guarded": {
+            "binary_sha256": "39af40d5bf9c4756691145ad0b38e0f248e10e03a06f4ed9a4c3a39723b58cb0",
+            "map_sha256": "12f4f53b33068669c3a3b5b060323e066c3497abc675d51feb5054f17259e114",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\original\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          }
+        },
+        "source_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\probe.cpp": "47b37a689f109b30aa76d8c5fc3293c1f689a702cf0e5e47132f687b07de4919",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\probe.h": "8efd2be3796b190ae3389e4b22baacff75e040bdca00f4c580cd837d4187fa48",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\host.c": "067c6425d6777c10a1410466bfb7071f34aaf6f276c8236a9f9126ca6c5e4b14",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_tls_storage_order.py": "e8dc6c33b760247b8495da7275d3f41c70ae176a586c775df555506dfb1e64bb",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_runtime.py": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\prepare_runtime.py": "eb425d8b68c00f02ff1d72e6b779b8fe22aa32ae9dec641f73830e14296d39fc",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\pthread_provenance.py": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\baseline.cc": "4c786915c7e1f894c81409367dbab11e69f93f233a03da7ff24e692a9b9c3cc4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\guarded.cc": "6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2"
+        },
+        "retained_binary_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\original\\storage-order-host.exe": "8aae53d06695e4a63c9cf34b542d8904bd69f2b2db9039fd5237ae4c8b7fd37e",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\original\\storage-order-archive.dll": "f851d44a6eb1f193c76c893fbaacc45e6e01d8a02ba9e2c8549a8f9eaf4ee8eb",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\original\\storage-order-baseline.dll": "81d01136c7bb7368d38d167407a999e707326cca9fa578f1e3826d46706735c6",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\original\\storage-order-guarded.dll": "39af40d5bf9c4756691145ad0b38e0f248e10e03a06f4ed9a4c3a39723b58cb0"
+        }
+      }
+    },
+    "rebuilt-baseline": {
+      "native": {
+        "assessment": {
+          "valid": true,
+          "original_gates": {
+            "checks": {
+              "complete_mechanism_and_cleanup_matrix": true,
+              "fixture_expectations_met": true,
+              "all_three_link_proofs": true,
+              "declared_complete": true,
+              "clean_exit_archive_unload": true,
+              "clean_exit_baseline_unload": true,
+              "clean_exit_guarded_unload": true,
+              "clean_exit_archive_foreign-unload": true,
+              "clean_exit_baseline_foreign-unload": true,
+              "clean_exit_guarded_foreign-unload": true,
+              "clean_exit_archive_main-exit": true,
+              "clean_exit_baseline_main-exit": true,
+              "clean_exit_guarded_main-exit": true,
+              "hang_preserved_as_failure_archive": true,
+              "hang_preserved_as_failure_baseline": true,
+              "clean_exit_guarded_abandoned-reader": true
+            },
+            "valid": true
+          },
+          "cases": [
+            {
+              "gcc_arm": "archive",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "abandoned-reader",
+              "software_exit_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "abandoned-reader",
+              "software_exit_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "abandoned-reader",
+              "software_exit_passed": true
+            }
+          ],
+          "normal_exits": 10,
+          "deliberate_failed_exits": 2
+        },
+        "links": {
+          "archive": {
+            "binary_sha256": "fb47346319e05419e48c0fdf10cfdacbca6ea790a799d941e70395cd7664d9e4",
+            "map_sha256": "47c15cb4c122527c467c3176bc8306152c9b708d4c8894322c0d4aa420d11ae3",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          },
+          "baseline": {
+            "binary_sha256": "20113a990d5af4693dc5c04cb77d534c6bc102b26ba25affa62ce1cd1a70f621",
+            "map_sha256": "b5d5e72abf1adf99af496a327837514df9e9f98035cc13f9b54147589f4da7a2",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          },
+          "guarded": {
+            "binary_sha256": "89d02770fa6891f5c9ae1694dada339db460686ddc6daca4c2f0035b149b7b2d",
+            "map_sha256": "c4daa38b822822f7f9506f6cdc4b8ece7dcde2806cc3f541ed16886910bcb2f6",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          }
+        },
+        "source_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\fixture.cpp": "5d8a8ad717cbb9efc10e05566c267e2aeb02616e0632f2fadce8a17edce1e92d",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\host.c": "35d80e950c588b4dcfb438f4a007bbd594191c83f8603ac550f79a685368928c",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\fixture.h": "19cd660f4e31d1f1dabeedbe277e8120a36baf9b9b3fb720af95e17ab3839a11",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\baseline.cc": "4c786915c7e1f894c81409367dbab11e69f93f233a03da7ff24e692a9b9c3cc4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\guarded.cc": "6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_runtime.py": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\pthread_provenance.py": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf"
+        },
+        "retained_binary_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\rebuilt-baseline\\runtime-host.exe": "eb42a8ffc222c56df508dca4d8f44e0173cd5db6db41b200547ec6352fe4efbc",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\rebuilt-baseline\\runtime-archive.dll": "fb47346319e05419e48c0fdf10cfdacbca6ea790a799d941e70395cd7664d9e4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\rebuilt-baseline\\runtime-baseline.dll": "20113a990d5af4693dc5c04cb77d534c6bc102b26ba25affa62ce1cd1a70f621",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\rebuilt-baseline\\runtime-guarded.dll": "89d02770fa6891f5c9ae1694dada339db460686ddc6daca4c2f0035b149b7b2d"
+        }
+      },
+      "ordering": {
+        "assessment": {
+          "valid": true,
+          "expected_order": "storage-first",
+          "cases": [
+            {
+              "gcc_arm": "archive",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": false
+            }
+          ],
+          "storage_lifetime_contract_passed": false
+        },
+        "links": {
+          "archive": {
+            "binary_sha256": "833ee221d2ace3ceb5287642a965b3ef7fae31baa8b2f5c85f0b11f3b508d310",
+            "map_sha256": "a04b53a9c18d3327c1d4707e3cf160d0845bd33da599e9cd1eb4da1681b42e64",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          },
+          "baseline": {
+            "binary_sha256": "1e26607bdb0006982d1f4383a5c7325c3a2dbefeaaf438a8a6f4ab7120f3d1af",
+            "map_sha256": "aaf83b72444320e2bd7e4b6ff8a7b897c13d8f391f51de30e7f724b822e6c812",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          },
+          "guarded": {
+            "binary_sha256": "04e3775d458eb87c42a864defa60e1ca9b561cb4d79beac57be1300bbc1de305",
+            "map_sha256": "3ce3f8058b4932b294cba2850db3799309919b924534b5ad3ed72ed5bce8f927",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\rebuilt-baseline\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          }
+        },
+        "source_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\probe.cpp": "47b37a689f109b30aa76d8c5fc3293c1f689a702cf0e5e47132f687b07de4919",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\probe.h": "8efd2be3796b190ae3389e4b22baacff75e040bdca00f4c580cd837d4187fa48",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\host.c": "067c6425d6777c10a1410466bfb7071f34aaf6f276c8236a9f9126ca6c5e4b14",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_tls_storage_order.py": "e8dc6c33b760247b8495da7275d3f41c70ae176a586c775df555506dfb1e64bb",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_runtime.py": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\prepare_runtime.py": "eb425d8b68c00f02ff1d72e6b779b8fe22aa32ae9dec641f73830e14296d39fc",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\pthread_provenance.py": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\baseline.cc": "4c786915c7e1f894c81409367dbab11e69f93f233a03da7ff24e692a9b9c3cc4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\guarded.cc": "6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2"
+        },
+        "retained_binary_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\rebuilt-baseline\\storage-order-host.exe": "cadd9f321a698d4045f3c1e2edb05a09d47ca84893fa3a538597190836859d80",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\rebuilt-baseline\\storage-order-archive.dll": "833ee221d2ace3ceb5287642a965b3ef7fae31baa8b2f5c85f0b11f3b508d310",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\rebuilt-baseline\\storage-order-baseline.dll": "1e26607bdb0006982d1f4383a5c7325c3a2dbefeaaf438a8a6f4ab7120f3d1af",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\rebuilt-baseline\\storage-order-guarded.dll": "04e3775d458eb87c42a864defa60e1ca9b561cb4d79beac57be1300bbc1de305"
+        }
+      }
+    },
+    "reverse-order": {
+      "native": {
+        "assessment": {
+          "valid": true,
+          "original_gates": {
+            "checks": {
+              "complete_mechanism_and_cleanup_matrix": true,
+              "fixture_expectations_met": true,
+              "all_three_link_proofs": true,
+              "declared_complete": true,
+              "clean_exit_archive_unload": true,
+              "clean_exit_baseline_unload": true,
+              "clean_exit_guarded_unload": true,
+              "clean_exit_archive_foreign-unload": true,
+              "clean_exit_baseline_foreign-unload": true,
+              "clean_exit_guarded_foreign-unload": true,
+              "clean_exit_archive_main-exit": true,
+              "clean_exit_baseline_main-exit": true,
+              "clean_exit_guarded_main-exit": true,
+              "hang_preserved_as_failure_archive": true,
+              "hang_preserved_as_failure_baseline": true,
+              "clean_exit_guarded_abandoned-reader": true
+            },
+            "valid": true
+          },
+          "cases": [
+            {
+              "gcc_arm": "archive",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "foreign-unload",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "main-exit",
+              "software_exit_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "abandoned-reader",
+              "software_exit_passed": false
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "abandoned-reader",
+              "software_exit_passed": false
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "abandoned-reader",
+              "software_exit_passed": true
+            }
+          ],
+          "normal_exits": 10,
+          "deliberate_failed_exits": 2
+        },
+        "links": {
+          "archive": {
+            "binary_sha256": "b7969d2bf250470f11704af3cd64c2d4eaee28cfd7c09b71d784995adb19d0a0",
+            "map_sha256": "8a2e529ae2a3b18beb70a99cb3861afb7e32c72ca601dc0e61c115464decbc50",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          },
+          "baseline": {
+            "binary_sha256": "f7f072a6d6cca6b2c9f28671b3c8b892cccd6fa54babb3ebaa2d1da7c6290e39",
+            "map_sha256": "dabfc90cf7ebeefd0e13f29e97ce9c9025d1db5f67db1ea49b31ffa758273d9c",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          },
+          "guarded": {
+            "binary_sha256": "618a7a5dd8e7d675a25d1b66d9a7c497f6e9f6d99ff2458684a081b227764766",
+            "map_sha256": "7307b0e8d64884a184fbd48405a4eeb8d1a71e4abc5036f7922244b4fd913352",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true
+          }
+        },
+        "source_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\fixture.cpp": "5d8a8ad717cbb9efc10e05566c267e2aeb02616e0632f2fadce8a17edce1e92d",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\host.c": "35d80e950c588b4dcfb438f4a007bbd594191c83f8603ac550f79a685368928c",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\runtime_tests\\fixture.h": "19cd660f4e31d1f1dabeedbe277e8120a36baf9b9b3fb720af95e17ab3839a11",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\baseline.cc": "4c786915c7e1f894c81409367dbab11e69f93f233a03da7ff24e692a9b9c3cc4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\guarded.cc": "6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_runtime.py": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\pthread_provenance.py": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf"
+        },
+        "retained_binary_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\reverse-order\\runtime-host.exe": "ed7256cb33de548e61fab230d91988a62f7b1734aea37b893386156d5c706f41",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\reverse-order\\runtime-archive.dll": "b7969d2bf250470f11704af3cd64c2d4eaee28cfd7c09b71d784995adb19d0a0",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\reverse-order\\runtime-baseline.dll": "f7f072a6d6cca6b2c9f28671b3c8b892cccd6fa54babb3ebaa2d1da7c6290e39",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\native\\reverse-order\\runtime-guarded.dll": "618a7a5dd8e7d675a25d1b66d9a7c497f6e9f6d99ff2458684a081b227764766"
+        }
+      },
+      "ordering": {
+        "assessment": {
+          "valid": true,
+          "expected_order": "callback-first",
+          "cases": [
+            {
+              "gcc_arm": "archive",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "pthread",
+              "storage_lifetime_contract_passed": true
+            },
+            {
+              "gcc_arm": "archive",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": true
+            },
+            {
+              "gcc_arm": "baseline",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": true
+            },
+            {
+              "gcc_arm": "guarded",
+              "mode": "foreign",
+              "storage_lifetime_contract_passed": true
+            }
+          ],
+          "storage_lifetime_contract_passed": true
+        },
+        "links": {
+          "archive": {
+            "binary_sha256": "0402a9921ad7aab0072bb4775838420b13e9375cd4b83615c0f292b7cbee12c2",
+            "map_sha256": "32762e772e73f7039b5bf19fd116b6b961050c86bfe6b7c75712f468dca71b5b",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          },
+          "baseline": {
+            "binary_sha256": "63579532944af2aa02b52701f8888e3a03e0c2928ecc43463ee24ed1438a6486",
+            "map_sha256": "9342301d9e11998fb43b996eb006e21e1bb55fef92a07e099d020035a88908f3",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          },
+          "guarded": {
+            "binary_sha256": "ac950acb6ae85cf3c51c726312bc3f910211a8485e050dafe8912a07f6b6f7ea",
+            "map_sha256": "53dc319f057fe2474e2d092e02d7334ee51c745b24e38a21891e03cb5b21d826",
+            "pthread_link": {
+              "pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "pthread_member_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "expected_pthread_archives": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a"
+              ],
+              "pthread_symbol_definitions": {
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "_pthread_cleanup_dest": 1
+              },
+              "only_selected_pthread_archives": true,
+              "passed": true,
+              "all_pthread_archive_providers": [
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a"
+              ],
+              "selected_thread_members": [
+                {
+                  "archive": "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a",
+                  "member": "libwinpthread_la-thread.o"
+                }
+              ],
+              "expected_thread_members": {
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libpthread.a": "libwinpthread_la-thread.o",
+                "d:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\pthread\\reverse-order\\lib\\libwinpthread.a": "libwinpthread_la-thread.o"
+              },
+              "pthread_api_definition_counts": {
+                "_pthread_cleanup_dest": 1,
+                "pthread_key_create": 1,
+                "pthread_key_delete": 1,
+                "pthread_create": 1,
+                "pthread_join": 1
+              },
+              "pthread_api_definition_types": {
+                "_pthread_cleanup_dest": [
+                  "T"
+                ],
+                "pthread_key_create": [
+                  "T"
+                ],
+                "pthread_key_delete": [
+                  "T"
+                ],
+                "pthread_create": [
+                  "T"
+                ],
+                "pthread_join": [
+                  "T"
+                ]
+              },
+              "exact_selected_thread_member": true
+            },
+            "independent_PE_symbols_verified": true,
+            "independent_release_branches": 2
+          }
+        },
+        "source_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\probe.cpp": "47b37a689f109b30aa76d8c5fc3293c1f689a702cf0e5e47132f687b07de4919",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\probe.h": "8efd2be3796b190ae3389e4b22baacff75e040bdca00f4c580cd837d4187fa48",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\tls_storage_order\\host.c": "067c6425d6777c10a1410466bfb7071f34aaf6f276c8236a9f9126ca6c5e4b14",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_tls_storage_order.py": "e8dc6c33b760247b8495da7275d3f41c70ae176a586c775df555506dfb1e64bb",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\run_runtime.py": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\prepare_runtime.py": "eb425d8b68c00f02ff1d72e6b779b8fe22aa32ae9dec641f73830e14296d39fc",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\scripts\\windows-shutdown\\pthread_provenance.py": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\baseline.cc": "4c786915c7e1f894c81409367dbab11e69f93f233a03da7ff24e692a9b9c3cc4",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\runtime\\guarded.cc": "6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2"
+        },
+        "retained_binary_hashes": {
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\reverse-order\\storage-order-host.exe": "0aa206785bceb6084c8563e25710878180fdf509584752d5a66bf025fe31ba5d",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\reverse-order\\storage-order-archive.dll": "0402a9921ad7aab0072bb4775838420b13e9375cd4b83615c0f292b7cbee12c2",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\reverse-order\\storage-order-baseline.dll": "63579532944af2aa02b52701f8888e3a03e0c2928ecc43463ee24ed1438a6486",
+          "D:\\a\\duckdb-spatial\\duckdb-spatial\\build\\windows-pthread-spatial\\ordering\\reverse-order\\storage-order-guarded.dll": "ac950acb6ae85cf3c51c726312bc3f910211a8485e050dafe8912a07f6b6f7ea"
+        }
+      }
+    }
+  },
+  "archive": {
+    "bytes": 9196621,
+    "sha256": "e497a0cd7f061401e217408642cd94206085f166b97fdf988f9d839a58592851",
+    "files": 807,
+    "crc_and_every_extracted_payload_verified": true
+  },
+  "source_snapshot": {
+    "CMakeLists.txt": {
+      "sha256": "0c670efac40a6a15292e1ad74806cc50edb3e6d2480c30e19f169d851327a6c6",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    ".github/workflows/windows-pthread-spatial.yml": {
+      "sha256": "cea37cc116b1655d61252a6e1d1346049c577afe4afdf9eb179baef97bb0f114",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/PTHREAD_ARCHIVES.md": {
+      "sha256": "c30ac4713a134de13e6724290eaf1433719a92e3e6e0da232074c32142e79d96",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/PTHREAD_SPATIAL_COMPARISON.md": {
+      "sha256": "2904e45a44b0236d0957895c35a81643d9a2c6d3141cefd0e4da9b71a7712168",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/README.md": {
+      "sha256": "648b5520407b18bcd8ce790e87accce5da834b19713db553caeb096ecbebd5c6",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/assess_experiment.py": {
+      "sha256": "0555dddd4eb905c2d35c0df38ad94ba83b8ac19627a1949bde0b9183e06b5363",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/assess_pthread_spatial.py": {
+      "sha256": "2a0e6f27fd308394436d26f4456e9886b428d16e09314a15670b7455c63a823a",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/build_and_test.ps1": {
+      "sha256": "79cd57a90d48bcc8d6c1f68a09e03c7862d7545125ceebcc1342d789754645e7",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/prepare_pthread_archives.py": {
+      "sha256": "0dc6cb9c95ea820dab10479af8207f209da7638bf0c3c23b9764a88dd873587f",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/prepare_runtime.py": {
+      "sha256": "eb425d8b68c00f02ff1d72e6b779b8fe22aa32ae9dec641f73830e14296d39fc",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/pthread_provenance.py": {
+      "sha256": "82021d3341347e175b9229ad8d204788e62258359e34dd2ceaa74a3784a256cf",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/run_pthread_controls.ps1": {
+      "sha256": "b8087698de4c17d9984fe1da6886cf88ac27bf37b6ade819a6e1b174171b58ed",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/run_runtime.py": {
+      "sha256": "e3f82f1e368fe563bd37cdca33fc58bdaa278825dd91565d981a005e77e5b412",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/run_spatial.py": {
+      "sha256": "4f482dd207c1640f63e38ac21e5921c62d9ae41185498c7c352c0b1a7e8d8553",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/run_sql_tests.py": {
+      "sha256": "3d267b041137f7b001c0f406425e9b22843fa1c8db3daf8ece712062c96e192b",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/run_tls_storage_order.py": {
+      "sha256": "e8dc6c33b760247b8495da7275d3f41c70ae176a586c775df555506dfb1e64bb",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/runtime_tests/fixture.cpp": {
+      "sha256": "5d8a8ad717cbb9efc10e05566c267e2aeb02616e0632f2fadce8a17edce1e92d",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/runtime_tests/fixture.h": {
+      "sha256": "19cd660f4e31d1f1dabeedbe277e8120a36baf9b9b3fb720af95e17ab3839a11",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/runtime_tests/host.c": {
+      "sha256": "35d80e950c588b4dcfb438f4a007bbd594191c83f8603ac550f79a685368928c",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/runtime_tests/pthread_layout.c": {
+      "sha256": "d8171adacf56612bdff124fc3e39c2d9e2f7dc04c7135f7aea2c79b87b83c98c",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/test_pthread_provenance.py": {
+      "sha256": "0b673334d40942c3f746d6fcdb5991b6e31f2e58cf45a8e2c032239ca4895ee8",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/test_tls_storage_order.py": {
+      "sha256": "5078d842067d37a366fa1ec963e2067023697cedb5eaa14b3c33f05ba159e5b0",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tests/test_assessment.py": {
+      "sha256": "c0126c1cdf6eb7b1417f9f44446e3e659e3770980d29e85b6f269064642bf840",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tests/test_pthread_archives.py": {
+      "sha256": "65aeaa15b17a5337252b0e9ac82093d859ab7da21195ad163ab580af0b1ee091",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tests/test_pthread_assessment.py": {
+      "sha256": "dfde15ae1b3abb92729b64cdd8218e093d240e3a660b64ed6a2e50f09bde6c44",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tests/test_pthread_build.py": {
+      "sha256": "64e92bd557da0596ee9b36cc9b04150eae030fa9f6832ac2ea3597796fa0cbe3",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tests/test_sql_events.py": {
+      "sha256": "1127e83d09b7192245bd36f1144c29f1a01ef46e8661ed42c1e55a1c22bf0eae",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tls_storage_order/README.md": {
+      "sha256": "2b23aedcc3265b50bf15cc89631f826b7f1819121bb567490ba9531ae425ac13",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tls_storage_order/host.c": {
+      "sha256": "067c6425d6777c10a1410466bfb7071f34aaf6f276c8236a9f9126ca6c5e4b14",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tls_storage_order/probe.cpp": {
+      "sha256": "47b37a689f109b30aa76d8c5fc3293c1f689a702cf0e5e47132f687b07de4919",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/tls_storage_order/probe.h": {
+      "sha256": "8efd2be3796b190ae3389e4b22baacff75e040bdca00f4c580cd837d4187fa48",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    },
+    "scripts/windows-shutdown/verify_pthread_build.py": {
+      "sha256": "1dbc4aee44032134f76cca9cfd99706e0aaa8b21a60931625014859d7675e4a7",
+      "checkout_mode": "deterministic-CRLF-checkout"
+    }
+  },
+  "run_context": {
+    "ref": "refs/heads/test/windows-pthread-spatial-20261107",
+    "runner_os": "Windows",
+    "run_attempt": "1",
+    "repository": "e-kotov/duckdb-spatial",
+    "commit": "bf3256b770c8a5d7924a2eb97a0ce085ec258071",
+    "runner_image": "win25-vs2026",
+    "run_id": "42398571027",
+    "runner_image_version": "20261103.298.1"
+  },
+  "rtools_version_marker": {
+    "present": true,
+    "content": "5355\n",
+    "sha256": "e522abda0009bcc9a137764bb37b4227c6790768aaa7dd072217aeea7c2ba598",
+    "path": "C:/rtools42/x86_64-w64-mingw32.static.posix/.version"
+  },
+  "preparation": {
+    "manifest_sha256": "319dec950158c5f7969684fee8fa6c6b23d611f09e886569c2bc6acd3aa0994b",
+    "private_archives": {
+      "original": {
+        "libpthread.a": {
+          "path": "D:/a/duckdb-spatial/duckdb-spatial/build/windows-pthread-spatial/pthread/original/lib/libpthread.a",
+          "sha256": "c9be6014ca8f70e5f3de095089f2cd4f0ad0e15d7fefe335caaf4928075f3745",
+          "thread_provider": "libwinpthread_la-thread.o",
+          "thread_object_sha256": "b9ace0fb9b4eacad6363baaf0696baec4c0adc9a38c2191159a4979bd5998474",
+          "member_count": 13
+        },
+        "libwinpthread.a": {
+          "path": "D:/a/duckdb-spatial/duckdb-spatial/build/windows-pthread-spatial/pthread/original/lib/libwinpthread.a",
+          "sha256": "9f4e33d7a96f88e07adedabe1b56151f59a90334934fa3e77deb09067242c3b8",
+          "thread_provider": "libwinpthread_la-thread.o",
+          "thread_object_sha256": "df628651f00686e15e067e8518192528e92abc9bf873c69260eb9d9f3e680141",
+          "member_count": 13
+        }
+      },
+      "rebuilt-baseline": {
+        "libpthread.a": {
+          "path": "D:/a/duckdb-spatial/duckdb-spatial/build/windows-pthread-spatial/pthread/rebuilt-baseline/lib/libpthread.a",
+          "sha256": "e0330d50a0754fbe7660c23d1c0d8a42f6ca4e7f06111563b4f3a0c6159e8ff5",
+          "thread_provider": "libwinpthread_la-thread.o",
+          "thread_object_sha256": "750250def6fb04d3820b6f0c1775801fb9669db8b75aee2437f66b0e28a1b6a5",
+          "member_count": 13
+        },
+        "libwinpthread.a": {
+          "path": "D:/a/duckdb-spatial/duckdb-spatial/build/windows-pthread-spatial/pthread/rebuilt-baseline/lib/libwinpthread.a",
+          "sha256": "a36c63dd721c33b3f06382ebd18258a91c14a9839fcee81ca167c8f80b99da72",
+          "thread_provider": "libwinpthread_la-thread.o",
+          "thread_object_sha256": "750250def6fb04d3820b6f0c1775801fb9669db8b75aee2437f66b0e28a1b6a5",
+          "member_count": 13
+        }
+      },
+      "reverse-order": {
+        "libpthread.a": {
+          "path": "D:/a/duckdb-spatial/duckdb-spatial/build/windows-pthread-spatial/pthread/reverse-order/lib/libpthread.a",
+          "sha256": "e837f0df3a0ace6176236bfb42ba4315c5585368674988b18db90a9f8d331944",
+          "thread_provider": "libwinpthread_la-thread.o",
+          "thread_object_sha256": "093a698441dc2ba545ae8d6bb3b1a4b77bd936983f6d679979db575c13da33aa",
+          "member_count": 13
+        },
+        "libwinpthread.a": {
+          "path": "D:/a/duckdb-spatial/duckdb-spatial/build/windows-pthread-spatial/pthread/reverse-order/lib/libwinpthread.a",
+          "sha256": "fba737991e8940e522bf6d11724d4f23ec439b7398f4bed3c2e5560ad9fe0c8c",
+          "thread_provider": "libwinpthread_la-thread.o",
+          "thread_object_sha256": "093a698441dc2ba545ae8d6bb3b1a4b77bd936983f6d679979db575c13da33aa",
+          "member_count": 13
+        }
+      }
+    },
+    "commands_verified": 56,
+    "included_header_copies_rehashed": 195,
+    "installed_inputs_recorded_unchanged": 203,
+    "installed_input_copies_rehashed": 193,
+    "unavailable_installed_bytes": [
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\g++.exe",
+        "sha256_recorded": "427db0e9383b2abb628b99ebcaff80d635351353dc67cf051b43de73cfaa868c"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\gcc.exe",
+        "sha256_recorded": "0ec44a9cbc6a27091d3e8a0859f95902112215bad3a8940f999e57e8fd3e8e9d"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\ar.exe",
+        "sha256_recorded": "52248be394296374b07ece357b3329f246a1ea5d8a64607058a4b1a3461e9624"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\nm.exe",
+        "sha256_recorded": "d71a43c193e23c88d06af129fe07673f123f7d85a4c5401ba3f055eacdca0fbe"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\objdump.exe",
+        "sha256_recorded": "b14dddb1fb9e53a604158d752b5459321f68714d52a084611f1c69836e5d08be"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\libexec\\gcc\\x86_64-w64-mingw32.static.posix\\10.4.0\\cc1.exe",
+        "sha256_recorded": "47406c14542c657c8ebb2d23e3c798f2ed1cbecaf92f3e5979757aeb2f821617"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\libexec\\gcc\\x86_64-w64-mingw32.static.posix\\10.4.0\\collect2.exe",
+        "sha256_recorded": "09c7af0f657aa248a2aac9b750c7cdd86b6776733b9bab63164709ee97456169"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\ld.exe",
+        "sha256_recorded": "297a6df99b597b25c6782cc84a360835c96d6b3b71d1d6354e2438caed364293"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\lib\\gcc\\x86_64-w64-mingw32.static.posix\\10.4.0\\libstdc++.a",
+        "sha256_recorded": "a51ab30b812a682ba6a8db469ee9c48e74c902349e3372f009fcd7ee3c4a5de9"
+      },
+      {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\lib\\gcc\\x86_64-w64-mingw32.static.posix\\10.4.0\\libgcc.a",
+        "sha256_recorded": "95acd6de95cdf0fa93d7439dbae0bcd21cc3e26510be8a5ace9b384d3a7e6031"
+      }
+    ],
+    "layout": {
+      "observed": {
+        "pointer_size": 8,
+        "pthread_t_size": 8,
+        "pthread_key_t_size": 4,
+        "pthread_mutex_t_size": 8,
+        "pthread_spinlock_t_size": 8,
+        "pthread_rwlock_t_size": 8,
+        "DWORD_size": 4,
+        "LONG_size": 4,
+        "thread_size": 480,
+        "thread_h": 40,
+        "thread_keymax": 72,
+        "thread_keyval": 80,
+        "thread_keyval_set": 88,
+        "thread_spin_keys": 104,
+        "thread_tid": 112,
+        "thread_rwlc": 116,
+        "thread_ended": 188,
+        "foreign_bitfield_changed_bytes": 1,
+        "foreign_bitfield_offset": 64,
+        "foreign_bitfield_mask": 16,
+        "rwlock_size": 48,
+        "rwlock_valid": 0,
+        "rwlock_busy": 4,
+        "rwlock_nex_count": 8,
+        "rwlock_nsh_count": 12,
+        "rwlock_ncomplete": 16,
+        "rwlock_mex": 24,
+        "rwlock_mcomplete": 32,
+        "rwlock_ccomplete": 40,
+        "destructor_iterations": 256
+      },
+      "expected": {
+        "pointer_size": 8,
+        "pthread_t_size": 8,
+        "pthread_key_t_size": 4,
+        "pthread_mutex_t_size": 8,
+        "pthread_spinlock_t_size": 8,
+        "pthread_rwlock_t_size": 8,
+        "DWORD_size": 4,
+        "LONG_size": 4,
+        "thread_size": 480,
+        "thread_h": 40,
+        "thread_keymax": 72,
+        "thread_keyval": 80,
+        "thread_keyval_set": 88,
+        "thread_spin_keys": 104,
+        "thread_tid": 112,
+        "thread_rwlc": 116,
+        "thread_ended": 188,
+        "foreign_bitfield_changed_bytes": 1,
+        "foreign_bitfield_offset": 64,
+        "foreign_bitfield_mask": 16,
+        "rwlock_size": 48,
+        "rwlock_valid": 0,
+        "rwlock_busy": 4,
+        "rwlock_nex_count": 8,
+        "rwlock_nsh_count": 12,
+        "rwlock_ncomplete": 16,
+        "rwlock_mex": 24,
+        "rwlock_mcomplete": 32,
+        "rwlock_ccomplete": 40,
+        "destructor_iterations": 256
+      },
+      "reference": {
+        "diagnostic_report": "https://github.com/e-kotov/duckspatial/blob/fe62f8b04c3e879ed3d143956cf73095302f6f5f/.github/windows-native-exit-capture-report.md",
+        "preserved_spatial_sha256": "3de3f298b4dcaa10f3e081d6ff1e411cf44d487d19317be28bd20303494a1415",
+        "additional_preserved_binary_mapping": {
+          "allocation_function": "pop_pthread_mem",
+          "preferred_calloc_call_address": "0x293be0db2",
+          "allocation_bytes": 480,
+          "foreign_flag_byte_offset": 64,
+          "foreign_flag_mask": 16
+        },
+        "scope": "Checks compiled v9 private layout against mapped preserved-binary fields and Windows x64 scalar ABI; does not claim identical vendor build flags."
+      },
+      "passed": true,
+      "source_sha256": "d8171adacf56612bdff124fc3e39c2d9e2f7dc04c7135f7aea2c79b87b83c98c",
+      "executable_sha256": "2b48af0c13ecdb4b29c084349b8d946fca20331915187bbe1883d55f39ee7681"
+    },
+    "compiler_tools_recorded": {
+      "g++": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\g++.exe",
+        "before_sha256": "427db0e9383b2abb628b99ebcaff80d635351353dc67cf051b43de73cfaa868c",
+        "bytes": 2157568,
+        "version": "g++.exe (GCC) 10.4.0\r\nCopyright (C) 2020 Free Software Foundation, Inc.\r\nThis is free software; see the source for copying conditions.  There is NO\r\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\r\n\r\n",
+        "target": "x86_64-w64-mingw32.static.posix",
+        "numeric_version": "10.4.0"
+      },
+      "gcc": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\gcc.exe",
+        "before_sha256": "0ec44a9cbc6a27091d3e8a0859f95902112215bad3a8940f999e57e8fd3e8e9d",
+        "bytes": 2154496,
+        "version": "gcc.exe (GCC) 10.4.0\r\nCopyright (C) 2020 Free Software Foundation, Inc.\r\nThis is free software; see the source for copying conditions.  There is NO\r\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\r\n\r\n",
+        "target": "x86_64-w64-mingw32.static.posix",
+        "numeric_version": "10.4.0"
+      },
+      "ar": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\ar.exe",
+        "before_sha256": "52248be394296374b07ece357b3329f246a1ea5d8a64607058a4b1a3461e9624",
+        "bytes": 1193472,
+        "version": "GNU ar (GNU Binutils) 2.37\r\nCopyright (C) 2021 Free Software Foundation, Inc.\r\nThis program is free software; you may redistribute it under the terms of\r\nthe GNU General Public License version 3 or (at your option) any later version.\r\nThis program has absolutely no warranty.\r\n"
+      },
+      "nm": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\nm.exe",
+        "before_sha256": "d71a43c193e23c88d06af129fe07673f123f7d85a4c5401ba3f055eacdca0fbe",
+        "bytes": 1179136,
+        "version": "GNU nm (GNU Binutils) 2.37\r\nCopyright (C) 2021 Free Software Foundation, Inc.\r\nThis program is free software; you may redistribute it under the terms of\r\nthe GNU General Public License version 3 or (at your option) any later version.\r\nThis program has absolutely no warranty.\r\n"
+      },
+      "objdump": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\objdump.exe",
+        "before_sha256": "b14dddb1fb9e53a604158d752b5459321f68714d52a084611f1c69836e5d08be",
+        "bytes": 2334208,
+        "version": "GNU objdump (GNU Binutils) 2.37\r\nCopyright (C) 2021 Free Software Foundation, Inc.\r\nThis program is free software; you may redistribute it under the terms of\r\nthe GNU General Public License version 3 or (at your option) any later version.\r\nThis program has absolutely no warranty.\r\n"
+      },
+      "cc1": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\libexec\\gcc\\x86_64-w64-mingw32.static.posix\\10.4.0\\cc1.exe",
+        "before_sha256": "47406c14542c657c8ebb2d23e3c798f2ed1cbecaf92f3e5979757aeb2f821617",
+        "bytes": 28401152,
+        "after_sha256": "47406c14542c657c8ebb2d23e3c798f2ed1cbecaf92f3e5979757aeb2f821617",
+        "unchanged": true
+      },
+      "collect2": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\libexec\\gcc\\x86_64-w64-mingw32.static.posix\\10.4.0\\collect2.exe",
+        "before_sha256": "09c7af0f657aa248a2aac9b750c7cdd86b6776733b9bab63164709ee97456169",
+        "bytes": 1581568,
+        "after_sha256": "09c7af0f657aa248a2aac9b750c7cdd86b6776733b9bab63164709ee97456169",
+        "unchanged": true
+      },
+      "ld": {
+        "path": "C:\\rtools42\\x86_64-w64-mingw32.static.posix\\bin\\ld.exe",
+        "before_sha256": "297a6df99b597b25c6782cc84a360835c96d6b3b71d1d6354e2438caed364293",
+        "bytes": 1744896,
+        "after_sha256": "297a6df99b597b25c6782cc84a360835c96d6b3b71d1d6354e2438caed364293",
+        "unchanged": true
+      }
+    },
+    "public_pthread_headers_rechecked": {
+      "pthread.h": "a193b89b9f6ba100af64af40a65612b5461df8df4e729329a0b773a4da59c90a",
+      "pthread_compat.h": "7c42868767b70f45ebbd41829b01d17cc4c50df1894791d729ae057c77ece393",
+      "pthread_signal.h": "46915f25fb94f61ac4bdfa9b38736e6524a5b36bc42b00f7e87526fbc24287a6",
+      "pthread_unistd.h": "920925577b990df78791e757b557bf83c2c4f9a6b91e87b3178a97258b011da2"
+    },
+    "vendor_flag_equivalence_claimed": false
+  },
+  "native_gate_recomputed": [
+    {
+      "pthread_arm": "original",
+      "expected_storage_order": "storage-first",
+      "storage_driver_exit": 0,
+      "cleanup_driver_exit": 0,
+      "diagnostic_expectation_met": true,
+      "storage_cases": 6,
+      "storage_contract_passes": 0,
+      "storage_contract_failures": 6,
+      "cleanup_cases": 12,
+      "cleanup_software_passes": 10,
+      "cleanup_reproduced_hangs": 2
+    },
+    {
+      "pthread_arm": "rebuilt-baseline",
+      "expected_storage_order": "storage-first",
+      "storage_driver_exit": 0,
+      "cleanup_driver_exit": 0,
+      "diagnostic_expectation_met": true,
+      "storage_cases": 6,
+      "storage_contract_passes": 0,
+      "storage_contract_failures": 6,
+      "cleanup_cases": 12,
+      "cleanup_software_passes": 10,
+      "cleanup_reproduced_hangs": 2
+    },
+    {
+      "pthread_arm": "reverse-order",
+      "expected_storage_order": "callback-first",
+      "storage_driver_exit": 0,
+      "cleanup_driver_exit": 0,
+      "diagnostic_expectation_met": true,
+      "storage_cases": 6,
+      "storage_contract_passes": 6,
+      "storage_contract_failures": 0,
+      "cleanup_cases": 12,
+      "cleanup_software_passes": 10,
+      "cleanup_reproduced_hangs": 2
+    }
+  ],
+  "totals": {
+    "storage_order_cases": 18,
+    "storage_contract_passes": 6,
+    "storage_contract_failures": 12,
+    "cleanup_cases": 36,
+    "cleanup_normal_exits": 30,
+    "deliberate_failed_exits": 6,
+    "total_fixture_cases": 54,
+    "total_normal_fixture_exits": 48
+  },
+  "predecessor_setup_failure": {
+    "run_id": 42398051324,
+    "runtime_cases": 0,
+    "explanation": "An unresolved synthetic temporary-path alias can pass hash checks but miss the canonical installed-input dictionary key. The exact error was reproduced locally with an alias, and canonicalizing only the fixture root made it pass. That local simulation is not a Windows execution.",
+    "correction": "self.work = Path(temporary.name).resolve(strict=True)",
+    "production_checks_weakened": false
+  },
+  "limits": [
+    "Native fixture observations do not establish the outcome of the six Spatial/R/SQL arms, which were still running when this checkpoint was captured.",
+    "Installed-input before/after hashes were recorded on Windows; retained header and original pthread archive copies are independently rehashed here. The listed tool binaries and GCC archives were not copied into this artifact.",
+    "The gate's raw-case functions are replayed from exact run sources with output-path aliases only; the full live installed-input assessor is not presented as having run offline.",
+    "The reverse-order source differs from the rebuilt control by the pinned accepted source change. Vendor compile-flag equivalence is not claimed, so the actual original/rebuilt Spatial controls remain necessary.",
+    "Old storage-order hazards and six deliberately induced cleanup hangs remain failed contracts/software exits despite a successful diagnostic comparison."
+  ],
+  "audit_passed": true,
+  "complete_runtime_fix_established": false
+}

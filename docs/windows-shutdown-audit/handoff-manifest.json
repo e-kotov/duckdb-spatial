@@ -1,0 +1,30 @@
+{
+  "run_id": 42398571027,
+  "head": "bf3256b770c8a5d7924a2eb97a0ce085ec258071",
+  "status": "awaiting_final_artifact; active_polling_stopped",
+  "final_artifact_downloaded": false,
+  "final_main_executed": false,
+  "files": {
+    "audit_pthread_spatial_42398571027.py": {
+      "bytes": 25136,
+      "sha256": "b57be362785299de9d3f34956cfaae0b0e78c3bad67074e3c147c1e4c4175799"
+    },
+    "windows-pthread-spatial-audit-handoff-42398571027.txt": {
+      "bytes": 9818,
+      "sha256": "3c02b3aba9a81b9b1dec69b2ac230d7a4b8da8d0a054a9ed870b622bec7148de"
+    },
+    "audit_windows_corrected_42383927641.py": {
+      "bytes": 39717,
+      "sha256": "77e65c800854a1defda4c1603d0bd3a7cb322f036159baa240f03c9e81e548b4"
+    },
+    "windows-pthread-native-independent-audit-42398571027.json": {
+      "bytes": 102495,
+      "sha256": "ad80b479bae46aa7b59738df758be73d5d5ce4f2c983b90ded8d4b400ccbfecc"
+    }
+  },
+  "separate_native_archive": {
+    "artifact_id": 13584960803,
+    "bytes": 9196621,
+    "sha256": "e497a0cd7f061401e217408642cd94206085f166b97fdf988f9d839a58592851"
+  }
+}

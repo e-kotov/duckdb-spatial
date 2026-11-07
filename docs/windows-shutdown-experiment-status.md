@@ -328,6 +328,25 @@ native TLS across DLL boundaries. The relevant
 addresses libstdc++ TLS exports. This is not an evaluated Spatial/R-compatible
 upgrade: cached static dependencies would also need scrutiny and rebuilding.
 
+Callback-provider selection is a separate part of that migration. The
+[GCC 16.2 configuration](https://github.com/gcc-mirror/gcc/blob/releases/gcc-16.2.0/libstdc%2B%2B-v3/configure.ac)
+probes the CRT's `__cxa_thread_atexit` only in its native-configuration branch;
+its [MinGW cross-configuration path](https://github.com/gcc-mirror/gcc/blob/releases/gcc-16.2.0/libstdc%2B%2B-v3/crossconfig.m4)
+does not make that probe. When detected, GCC omits the fallback cleanup-key
+implementation. The CRT forwarding entry point already exists in
+[MinGW v9](https://github.com/mingw-w64/mingw-w64/blob/acc9b9d9eb63a13d8122cbac4882eb5f4ee2f679/mingw-w64-crt/crt/cxa_thread_atexit.c),
+and GCC 10.4 already contains the corresponding provider-selection branch.
+This is not a newly introduced GCC 16 callback API.
+
+The [MSYS2 GCC recipe](https://github.com/msys2/MINGW-packages/blob/5c1ca99730b358ba0915fc8eba7a29e6e169c378/mingw-w64-gcc/PKGBUILD)
+uses POSIX threading, enables native TLS and requests a native bootstrap.
+Source review therefore suggests a different provider from the captured
+cross-built Rtools fallback. The distributed package's generated configuration,
+archive contents and selected provider have not been inspected. Its actual CRT
+dependency version also is not attested by the contemporaneous source recipe.
+A version number alone must not substitute for those binary/configuration
+checks or an actual Spatial/R comparison.
+
 ## Captured binary and current source
 
 The preserved original `spatial.duckdb_extension` has SHA-256

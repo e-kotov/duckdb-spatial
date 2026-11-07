@@ -1,0 +1,170 @@
+DuckDB Spatial Windows six-arm audit handoff
+============================================
+
+Run: https://github.com/e-kotov/duckdb-spatial/actions/runs/42398571027
+Job: 128481185559
+Exact experiment commit: bf3256b770c8a5d7924a2eb97a0ce085ec258071
+Branch: test/windows-pthread-spatial-20261107
+
+Status at handoff
+-----------------
+The last directly reported check at 18:28:01 UTC on 2026-11-07 showed step 15,
+"Build six matched arms and retain every real R and SQL outcome", in progress
+with no failed step. Active polling was then stopped at the coordinating
+agent's request. The workflow itself was not cancelled or changed.
+
+No final artifact has been downloaded. No final six-arm verdict, complete
+runtime fix, PR result, or upstream action is claimed by this handoff.
+
+The failed predecessor, run 42398051324 at 0f8d1e3, stopped in synthetic
+validation tests before any native or Spatial workload. A local path-alias
+simulation reproduced its exact compiler-record error despite matching bytes:
+an unresolved temporary-path spelling was absent from the canonical dictionary
+lookup. The one-line test-fixture correction was
+    self.work = Path(temporary.name).resolve(strict=True)
+The retry passed those Windows validation tests. The local alias simulation
+was not itself a Windows execution; production provenance checks were unchanged.
+
+Completed and independently reviewed native audit
+-------------------------------------------------
+Early artifact: 13584960803, windows-pthread-native-42398571027-1
+Original ZIP: windows-pthread-native-42398571027.zip
+Bytes: 9196621
+SHA-256: e497a0cd7f061401e217408642cd94206085f166b97fdf988f9d839a58592851
+Members: 807; ZIP CRC and every extracted payload checked.
+
+The Rtools .version marker contains exactly "5355\n"; SHA-256:
+e522abda0009bcc9a137764bb37b4227c6790768aaa7dd072217aeea7c2ba598
+
+All 54 native cases were audited from raw records and exact retained sources:
+* 18 ordering cases: 6 reverse-order lifetime passes, 12 original/rebuilt
+  lifetime failures. All 18 processes exited normally.
+* 36 cleanup cases: 30 normal exits and 6 deliberately induced failed exits.
+  Complete per-cycle TLS/global/atexit/unload events were checked.
+* All six actual private archives and every member were rehashed. Only the
+  designated thread object changed in the two rebuilt families.
+* All 195 included-header copies were rehashed: 191 installed headers and
+  four pinned private headers. With the two original pthread archives, 193
+  retained installed-input copies were independently rehashed.
+* All 203 installed-input records reported matching before/after hashes.
+* Actual retained DLLs were independently inspected with GNU nm and objdump;
+  pthread/GCC providers and the real emutls release hook matched the maps.
+* A separate read-only review found no conflicting native observation and
+  checked both original thread object copies against their archive members
+  and the rebuilt control's 58 global defined symbols.
+
+Native audit JSON SHA-256:
+ad80b479bae46aa7b59738df758be73d5d5ce4f2c983b90ded8d4b400ccbfecc
+Native review ZIP: windows-pthread-native-review-42398571027.zip
+Bytes: 20511
+SHA-256: 2dc5aea1096f841a4069bb608966dcd04cde0e36cd481e657ecdd0b87b6eb96c
+
+Final audit inputs and published layout
+--------------------------------------
+The final driver is audit_pthread_spatial_42398571027.py. It can live under
+docs/windows-shutdown-audit/ with these unchanged companion files:
+* audit_windows_corrected_42383927641.py
+  SHA-256: 77e65c800854a1defda4c1603d0bd3a7cb322f036159baa240f03c9e81e548b4
+* windows-pthread-native-independent-audit-42398571027.json
+  SHA-256: ad80b479bae46aa7b59738df758be73d5d5ce4f2c983b90ded8d4b400ccbfecc
+
+The shared raw-R helper is hash-pinned and receives the explicit repository,
+run commit, artifact path prefix, and report object. Its original bytes must
+not be edited. The new driver supports --source-root (alias --repo) and
+--artifact-root (alias --root), so relocation does not depend on scratch paths.
+
+Supply the separately retained early native ZIP and, when available, the final
+ZIP plus its unmodified extraction and GitHub artifact metadata JSON. The final
+ZIP must be beside the extraction with the same basename and a .zip suffix.
+Metadata must contain the final artifact object, or {"artifact": object}, with
+its id, size_in_bytes, digest, workflow_run.id, and workflow_run.head_sha.
+The driver checks run 42398571027 and the exact bf3256b commit; it is not a
+generic gate for a different run or revision.
+
+The Git checkout used for --source-root must contain bf3256b770c8a5d7924a2eb97a0ce085ec258071
+and pinned upstream commit d332807f4ffdcc4da0092fe760ef48266f548941.
+Use Python 3.12+, psutil (the experiment pins 7.0.0), and GNU nm with PE support.
+The native checkpoint auditor also uses GNU objdump if independently rerun.
+
+Exact invocation after publication, from the fork checkout root
+--------------------------------------------------------------
+Set audit_evidence to the directory holding the original ZIPs/extractions and
+saved API metadata, then run:
+
+audit_evidence=/absolute/path/to/evidence
+python3 docs/windows-shutdown-audit/audit_pthread_spatial_42398571027.py \
+  --source-root "$PWD" \
+  --artifact-root "$audit_evidence/windows-pthread-spatial-42398571027" \
+  --api-metadata "$audit_evidence/windows-pthread-spatial-42398571027-api-metadata.json" \
+  --native-archive "$audit_evidence/windows-pthread-native-42398571027.zip" \
+  --native-report docs/windows-shutdown-audit/windows-pthread-native-independent-audit-42398571027.json \
+  --raw-r-audit docs/windows-shutdown-audit/audit_windows_corrected_42383927641.py \
+  --output "$audit_evidence/windows-pthread-spatial-independent-audit-42398571027.json"
+
+If psutil is available in a separate package directory instead of the active
+Python environment, add --python-deps /absolute/path/to/python-packages.
+For the present workspace that directory is:
+/workspace/scratch/efeea47e318a/windows-shutdown-test-deps
+
+The output must be outside the original extraction. The driver refuses to
+overwrite an input artifact, retained report/helper, or extracted payload.
+
+What the final driver will validate
+-----------------------------------
+1. Final ZIP/API identity, safe unique paths, CRC, and every extracted payload.
+2. Byte equality of all 807 early checkpoint files before reusing their audited
+   native observations, source snapshots, headers, and private archives.
+3. Before/after live preparation reports, exact private archive bytes, pinned
+   compiler/runtime records, and the exact Spatial source commit.
+4. Six actual DLLs, archive/source factors, before/after link proofs, CMake
+   selections, runtime compile commands, PE metadata, and independent symbols.
+5. All 216 planned individual R results against executed scripts, raw original
+   supervisor files, complete checkpoints, loaded DLL observations, actual
+   thread counts, unforced success, and installed-copy removal.
+6. Six planned SQL suites, each with the exact provenance-test body and command,
+   known recorded paths, all 33 unchanged upstream sources, 34 begin/end pairs,
+   130 statement passes, 201 Catch assertions, and the sole exact empty template.
+7. Raw-case gates and decision fields against this run's archived assessment.
+   Ordering-only support needs both order-only builds; combination support is
+   separate; both baseline default-thread hang populations must reproduce.
+   Guard-only clean exits never establish a complete fix.
+
+Exit status zero means the evidence/recorded-decision audit passed. It does
+NOT mean that every software process passed or that a candidate is supported.
+Read historical_assessment, the separate support booleans, and individual
+outcomes. An honest inconclusive or unsupported comparison can pass the audit.
+ready_for_upstream_submission and complete_runtime_fix_established stay false.
+
+Validated driver checks so far
+-----------------------------
+Python parsing and --help succeeded. The complete SQL checker, including exact
+paths, provenance bytes, command, event ordering, and nonnegative counters, was
+replayed against all three actual corrected-run3 SQL records. It accepted all
+three unchanged 68-event / 130-statement records. A second reviewer checked the
+six-arm decision schema and SQL logic. The full final main has NOT been run:
+the final artifact was not available when active monitoring stopped.
+
+Missing-byte and interpretation limits
+-------------------------------------
+The early artifact does not retain eight installed tool binaries (g++.exe,
+gcc.exe, ar.exe, nm.exe, objdump.exe, cc1.exe, collect2.exe, ld.exe) or the
+installed libstdc++.a and libgcc.a. Their before/after hashes are recorded and
+pinned where applicable, but are not independently rehashed offline.
+
+The final workflow does not copy build/release/test/unittest.exe. The audit
+compares its six recorded hashes and known path without claiming that absent
+runner bytes were independently rehashed. The live Windows gate does rehash
+that runner; the offline driver does not silently substitute for that check.
+
+Normal R installed copies are removed; retained observations/parent hashes are
+checked against actual source DLLs. A supervised quit timeout is not a new
+native stack capture. A post-kill descendant census is not available for the
+forced baseline cases, so complete immediate teardown remains unconfirmed.
+
+The native ordering fixture uses its measured key-allocation history. The
+separate key-reuse probe is not part of these 54 native cases or six Spatial
+arms, and its findings must not be silently imported into this audit.
+
+No source edits outside the evidence handoff, remote mutations, final artifact
+download, final verdict, additional PR, or upstream action were performed by
+the handoff agent after polling stopped.
