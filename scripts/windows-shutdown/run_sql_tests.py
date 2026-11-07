@@ -20,6 +20,15 @@ import time
 import psutil
 
 
+# This file is already empty in the pinned upstream tree d332807f4ffdcc4d.
+# Keep executing and recording it; it cannot produce an assertion. No other
+# zero-assertion file is accepted, and the complete suite must still contribute
+# all 130 statements observed in the unchanged selected tests + provenance check.
+KNOWN_EMPTY_TEST = "test/sql/geos/equals.test"
+EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+MIN_STATEMENT_PASSES = 130
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -33,6 +42,31 @@ def canonical(path: str | Path, source_root: Path) -> str:
     if not value.is_absolute():
         value = source_root / value
     return os.path.normcase(str(value.resolve()))
+
+
+def verified_empty_tests(selected: list[Path], source_root: Path) -> dict[str, dict]:
+    verified = {}
+    for path in selected:
+        if path.stat().st_size != 0:
+            continue
+        relative = path.relative_to(source_root).as_posix()
+        digest = sha256(path)
+        if relative != KNOWN_EMPTY_TEST or digest != EMPTY_SHA256:
+            raise ValueError(f"Unexpected empty SQL test source: {relative}")
+        verified[canonical(path, source_root)] = {
+            "path": relative, "bytes": 0, "sha256": digest,
+            "upstream_git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+        }
+    return verified
+
+
+def event_passed(event: dict, source_root: Path, known_empty: dict[str, dict]) -> bool:
+    passes = event.get("passes")
+    name = event.get("name")
+    return (event.get("status") == "ok" and event.get("fails") == 0
+            and type(passes) is int and passes >= 0 and isinstance(name, str)
+            and (passes > 0 or canonical(name, source_root) in known_empty)
+            and event.get("skip-mode", 0) == 0 and not event.get("partial-skip-reasons"))
 
 
 def read_events(log: Path) -> tuple[list[dict], list[str]]:
@@ -86,6 +120,7 @@ def run(args: argparse.Namespace) -> dict:
     selected += [source_root / "test/sql/proj.test"]
     if len(selected) < 3 or any(not path.is_file() for path in selected):
         raise ValueError("Expected unchanged GDAL, GEOS and PROJ SQL test sources")
+    known_empty = verified_empty_tests(selected, source_root)
 
     # A statically linked Spatial instance cannot pass this assertion. Direct
     # LOAD can leave duckdb_extensions().install_path empty, so the supervisor
@@ -156,11 +191,9 @@ def run(args: argparse.Namespace) -> dict:
     terminal_names = [canonical(event["name"], source_root) for event in terminal_events
                       if isinstance(event.get("name"), str)]
     all_tests_reported = set(terminal_names) == expected and len(terminal_names) == len(expected)
-    all_tests_ok = all(
-        event.get("status") == "ok" and event.get("fails") == 0
-        and isinstance(event.get("passes"), int) and event["passes"] > 0
-        and event.get("skip-mode", 0) == 0 and not event.get("partial-skip-reasons")
-        for event in terminal_events)
+    statement_passes = sum(event.get("passes", 0) for event in terminal_events)
+    all_tests_ok = (all(event_passed(event, source_root, known_empty) for event in terminal_events)
+                    and statement_passes >= MIN_STATEMENT_PASSES)
     binary_unchanged = sha256(repository_extension) == extension_hash
     observed_exact_binary = observed_modules == {canonical(repository_extension, source_root)}
     passed = (timeout_reason is None and process.returncode == 0
@@ -179,8 +212,10 @@ def run(args: argparse.Namespace) -> dict:
         "runner": str(runner), "runner_sha256": sha256(runner),
         "expected_test_files": len(tests), "upstream_test_files": len(selected),
         "all_tests_reported": all_tests_reported, "all_tests_ok": all_tests_ok,
-        "statement_passes": sum(event.get("passes", 0) for event in terminal_events),
+        "statement_passes": statement_passes,
+        "minimum_statement_passes": MIN_STATEMENT_PASSES,
         "statement_failures": sum(event.get("fails", 0) for event in terminal_events),
+        "verified_empty_test_files": list(known_empty.values()),
         "tests": terminal_events, "event_errors": event_errors,
         "timeout_processes": process_snapshot,
         "source_files": [{"path": str(path.relative_to(source_root)), "sha256": sha256(path)}

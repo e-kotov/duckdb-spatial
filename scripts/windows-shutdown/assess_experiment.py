@@ -99,7 +99,7 @@ def assess_sql(summary: dict, extension_sha: str, guarded: bool) -> dict:
         "no_event_parse_errors": summary.get("event_errors") == [],
         "valid_process_outcome": summary.get("reason") in allowed,
         "no_skip_or_empty_suite": summary.get("upstream_test_files", 0) > 0
-                                  and summary.get("statement_passes", 0) > 0,
+                                  and summary.get("statement_passes", 0) >= 130,
     }
     if guarded:
         checks["clean_exit"] = summary.get("all_passed") is True and summary.get("exit_code") == 0

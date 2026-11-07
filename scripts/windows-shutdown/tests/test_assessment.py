@@ -44,7 +44,7 @@ def sql_summary(sha=SHA):
         "extension_sha256": sha, "binary_unchanged": True,
         "observed_exact_binary": True, "module_observation_errors": [],
         "all_tests_reported": True, "all_tests_ok": True, "event_errors": [],
-        "reason": "passed", "upstream_test_files": 33, "statement_passes": 100,
+        "reason": "passed", "upstream_test_files": 33, "statement_passes": 130,
         "all_passed": True, "exit_code": 0,
     }
 
@@ -122,6 +122,13 @@ class AssessmentTests(unittest.TestCase):
         data = sql_summary()
         data["all_tests_ok"] = False
         self.assertFalse(assess_sql(data, SHA, False)["valid"])
+
+    def test_sql_empty_source_exception_cannot_reduce_assertion_coverage(self):
+        for passes in (0, 1, 129):
+            with self.subTest(passes=passes):
+                data = sql_summary()
+                data["statement_passes"] = passes
+                self.assertFalse(assess_sql(data, SHA, True)["valid"])
 
     def test_native_hang_kept_separate_from_software_success(self):
         data = native_summary()

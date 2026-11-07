@@ -2,10 +2,14 @@
 
 ## Status, 7 November 2026
 
-**Candidate implemented; full Windows Spatial validation is pending.**
-This is an opt-in experiment, not a demonstrated fix or an upstream submission.
-The ordinary Spatial build and distribution workflow are unchanged when the
-new experiment options are unset. No thread default, existing test, or cleanup
+**The first matched Windows R comparison supports the candidate; independent
+replication and strict platform validation remain in progress.**
+This is an opt-in experiment, not an upstream submission or a claim of universal
+shutdown safety. See the [evidence ledger](../../docs/windows-shutdown-experiment-status.md)
+for the exact outcomes and the initial CI accounting error.
+The ordinary Spatial build is unchanged when the new experiment options are
+unset. A fork-only deployment guard preserves upstream behavior while keeping
+fork reviews out of the release/signing job. No thread default, existing test, or cleanup
 callback is disabled. No change was made to duckspatial GeoParquet PR #5.
 
 Experiment branch: `fix/windows-tls-key-shutdown-20261107`.
@@ -18,11 +22,22 @@ Do not reinterpret local checks as Windows validation or create a
 production-fix PR on that basis.
 
 The initial [Windows run 42375674793](https://github.com/e-kotov/duckdb-spatial/actions/runs/42375674793)
-at `dc61d2afc17b15996f2d8e5c1482308adf9c4c2a` passed setup and its original
-nine-case native fixture stage. The additional foreign-thread controls below
-were prepared afterward for the next run. The native stage's successful
-experiment includes two expected baseline hangs; those remain failed software
-exits. Its success does not establish a fix in the actual Spatial workload.
+at `dc61d2afc17b15996f2d8e5c1482308adf9c4c2a` recorded nine exit hangs in 30
+default-thread R processes in each baseline, versus zero in 30 guarded
+processes. All five single-thread controls and the separate spatial smoke
+process passed in every arm. The raw SQL results contain 130 passing
+statements, no failures or skips, and exit status zero in every arm. The final
+CI gate nevertheless failed because it mistakenly required an assertion from
+the unchanged, zero-byte upstream `geos/equals.test`. The original failed
+conclusion and artifacts are preserved. The narrow gate correction retains
+that file in execution and requires at least 130 statements across the suite.
+
+The separate [native run 42382378295](https://github.com/e-kotov/duckdb-spatial/actions/runs/42382378295)
+passed all twelve fixture expectations, including the foreign-thread controls.
+Its ten clean software exits and two expected baseline hangs remain separate
+outcomes. Exact compiler, C++ and pthread archive hashes and generated candidate
+source match the first full run. This strengthens the cleanup-contract evidence;
+it does not identify the vanished reader in the original dump.
 
 ## Evidence reused
 
@@ -119,8 +134,9 @@ bookkeeping memory. This follows the distinction documented by Microsoft for
 and the documented
 [shutdown-state query](https://learn.microsoft.com/en-us/windows/win32/devnotes/rtldllshutdowninprogress).
 
-This is a plausible correction to unsafe final key deletion. It is not yet
-evidence that the real Spatial workload exits correctly with the patch.
+The first matched R comparison now supplies execution evidence for this
+correction in the actual Spatial workload. Replication and supported-platform
+checks remain necessary; it does not establish universal shutdown safety.
 
 ## Matched Windows experiment
 
@@ -197,8 +213,11 @@ duplicate 100+ MB DLLs from exhausting runner disk. The exact arm DLL is kept.
 Spatial's current MinGW config omits normal SQL test registration. The new
 supervisor explicitly runs 33 unchanged upstream GDAL/GEOS/PROJ files, plus a
 generated provenance fixture. It verifies the actual native mapped DLL,
-complete test events, nonzero assertion counts, no skips/failures and normal
-process exit. The original test configuration and files stay unchanged.
+complete test events, at least 130 passing statements, no skips/failures and
+normal process exit. Every nonempty file must contain an assertion. The sole
+zero-byte upstream file is still run and recorded, and is accepted only with
+its exact known path and empty-file SHA-256. The original test configuration
+and files stay unchanged.
 
 ## Interpretation and launch
 
@@ -215,8 +234,8 @@ be manually dispatched. The narrow push trigger avoids needing to merge a new
 dispatch-only workflow into the fork's default branch. Default repetition
 counts also apply to push events. No upstream repository mutation is needed.
 
-After the fork exists, push the prepared branch, inspect the first native
-fixture results, then the complete comparison artifacts. Any compiler,
+Inspect each run's native fixture results and complete comparison artifacts.
+The fork and its experiment branches already exist. Any compiler,
 dependency, SQL-version or runner failure must be resolved as an explicit
 infrastructure/test problem; it must not be waived as a fix. If the comparison
 supports the guard, repeat on independent Windows runners and run supported
@@ -224,7 +243,7 @@ platform checks before preparing a draft PR against the fork. Upstream
 submission and any merge require the user's approval.
 
 Local checks completed during preparation: exact source/hash and generated
-patch verification; Python compilation; sixteen adverse/positive gate tests;
+patch verification; Python compilation; twenty-two adverse/positive gate tests;
 actual R parsing of both adapted programs; independent code review; YAML
 parsing; action-pin verification; and native Linux compilation of original and
 patched sources with identical executable `.text` bytes. These local checks do

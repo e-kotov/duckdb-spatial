@@ -32,6 +32,7 @@ concurrency:
 
 jobs:
   compare:
+    if: github.repository == 'e-kotov/duckdb-spatial'
     name: Original archive, rebuilt baseline and guarded runtime on Windows
     runs-on: windows-2025-vs2026
     timeout-minutes: 180
@@ -126,6 +127,11 @@ jobs:
                              recursive = TRUE, pattern = '\\.dll$')
           write.csv(data.frame(path = dlls, md5 = unname(tools::md5sum(dlls))),
                     'build/windows-shutdown/r-duckdb-binaries.csv', row.names = FALSE)
+
+      - name: Check that validation rejects incomplete and failing outcomes
+        run: |
+          python -m unittest discover -s scripts/windows-shutdown/tests -v
+          exit $LASTEXITCODE
 
       - name: Prepare immutable reproducer inputs and the two runtime sources
         run: |

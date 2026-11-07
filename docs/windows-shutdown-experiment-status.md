@@ -4,6 +4,88 @@ This ledger supplements [the experiment design](../scripts/windows-shutdown/READ
 All experimental branches, Actions runs and any review PR belong exclusively to
 `e-kotov/duckdb-spatial`. No upstream PR or merge is authorized.
 
+## First matched Windows comparison
+
+[Run 42375674793](https://github.com/e-kotov/duckdb-spatial/actions/runs/42375674793)
+at `dc61d2afc17b15996f2d8e5c1482308adf9c4c2a` completed all three builds and
+their actual R and SQL processes. Default R connections used four threads;
+single-thread controls used one. The original workload still performed all
+three GeoJSON/Shapefile iterations, data checks, owned connection/driver
+cleanup, garbage collection and the explicit zero-status quit request.
+
+| Arm | Default-thread R outcomes | Single-thread controls | Separate spatial smoke | SQL process |
+| --- | --- | --- | --- | --- |
+| Original compiler archive | 21 normal exits, **9 quit hangs** / 30 | 5 / 5 pass | Pass | Exit 0; 130 statements pass |
+| Recompiled original GCC source | 21 normal exits, **9 quit hangs** / 30 | 5 / 5 pass | Pass | Exit 0; 130 statements pass |
+| Guarded GCC source | **30 normal exits, 0 quit hangs** / 30 | 5 / 5 pass | Pass | Exit 0; 130 statements pass |
+
+Loaded-DLL hashes, the original diagnostic-input hashes, recorded thread
+counts and source-selection link maps were retained. The two baseline hangs
+remain failed software exits. No new native dumps were captured in this
+comparison: the new failures reproduce the original workload and post-quit
+phenotype, but their individual native wait stacks were not remeasured.
+
+Independent review checked all 108 individual R supervisor records,
+checkpoints and loaded-extension CSV files, not only the aggregate summary.
+It found no discrepancy in these counts, input identities or loaded-DLL hashes.
+All 36 guarded processes also allowed their installed DLL copies to be removed
+after exit. Removal reported `AccessDenied` only for the 18 forcibly terminated
+baseline hangs; those cleanup failures are retained in the recorded results.
+
+The workflow's final conclusion is still **failure**, with verdict
+`failed-validation`. Its SQL supervisor mistakenly required a nonzero
+assertion count from every selected file. Upstream's
+`test/sql/geos/equals.test` is zero bytes (Git blob
+`e69de29bb2d1d6434b8b29ae775ad8c2e48c5391`, SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`).
+Each raw SQL log has all 34 expected terminal events: 33 original files,
+including that empty file, and one provenance fixture. Every event has status
+`ok`, no assertion failure and no skip; the native process exits with status
+zero. The empty file is the only event with zero passing statements.
+
+The correction keeps this file in the input list and records its empty-source
+identity explicitly. It accepts zero assertions only for that exact empty
+file, rejects any other zero-assertion or skipped test, and requires at least
+130 passing statements overall. Re-evaluating the original raw events under
+that rule is an **offline accounting correction**, not a new execution or a
+change to the original CI conclusion. A fresh run will exercise the corrected
+gate. The candidate runtime source itself is unchanged.
+
+The complete artifact (ID `13578411129`, 169,234,536 bytes, 1,323 ZIP members)
+was preserved and all CRCs verified. Its SHA-256 is
+`a224fdc2de182fe14800ef77062af2b29a40f3b70f078f9ba7831f4eab273ae2`.
+
+## Independent native cleanup control
+
+[Run 42382378295](https://github.com/e-kotov/duckdb-spatial/actions/runs/42382378295)
+at `23e398f4d0edc3c5dfedde47f105cce3aa576149` satisfies all twelve fixture
+expectations. Each of the three runtime variants passes ordinary joined-worker
+unload, foreign-worker unload and main-thread exit. Both unload cases preserve
+128 TLS destructor calls, 16 global destructors and 16 atexit callbacks per
+variant. The foreign-worker markers show each group of eight TLS destructors
+before the host's joined-thread checkpoint and subsequent DLL unloading.
+
+The artificial abandoned-reader case hangs after the exit request in the
+archive and rebuilt baseline, and exits with status zero in the guarded arm.
+The guarded arm retains its global destructor and atexit callback. Thus the
+experiment has **ten clean software exits and two expected diagnostic hangs**.
+The hung processes are explicitly marked as supervisor-terminated failures.
+
+Raw markers, counters, DLL symbols and link maps were independently reviewed.
+The compiler, C++ archive and both pthread archive hashes match the first full
+comparison, as do both generated source files. The guarded source SHA-256 is
+`6d13fcfaaea6098c2bc6ba5c80771af87bd85c58d1a4598eae19201859cac3a2`.
+The separate native manifest does not record `libgcc.a`, so parity of that
+archive between these two runners has not been established by its manifest.
+
+This fixture tests the mechanism and the stated cleanup contracts. It does not
+attribute the original vanished reader, trace destructors by thread ID, or test
+the separate historical emutls object-storage lifetime defect.
+
+Its preserved artifact (ID `13577174661`, 1,646,945 bytes, 95 ZIP members) has
+SHA-256 `0362c695ee0d513a45472d481896959fda136686a361e251492604e27edfeab8`.
+All ZIP CRCs verify.
+
 ## Captured binary and current source
 
 The preserved original `spatial.duckdb_extension` has SHA-256
