@@ -1,0 +1,144 @@
+name: Windows TLS key reuse experiment
+
+# A successful diagnostic can include deliberately reproduced software failures.
+# This workflow does not build a production extension or install a runtime patch.
+on:
+  push:
+    branches: [test/windows-tls-key-reuse-20261107]
+    paths:
+      - '.github/workflows/windows-tls-key-reuse.yml'
+      - 'scripts/windows-shutdown/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-tls-key-reuse-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare-key-reuse:
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    name: Normal allocation versus reserved low-key reuse
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Check out the bounded runtime experiment
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+
+      - name: Parse collector and preserve fixture sources and run identity
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            "$env:GITHUB_WORKSPACE/scripts/windows-shutdown/run_tls_key_reuse.ps1",
+            [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -ne 0) { throw ($errors | Out-String) }
+          $output = 'build/windows-tls-key-reuse'
+          New-Item -ItemType Directory -Force -Path "$output/source" | Out-Null
+          Copy-Item 'scripts/windows-shutdown' "$output/source" -Recurse
+          Copy-Item '.github/workflows/windows-tls-key-reuse.yml' "$output/source"
+          @{
+            repository = $env:GITHUB_REPOSITORY
+            ref = $env:GITHUB_REF
+            commit = $env:GITHUB_SHA
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            runner_os = $env:RUNNER_OS
+            runner_image = $env:ImageOS
+            runner_image_version = $env:ImageVersion
+          } | ConvertTo-Json | Set-Content "$output/run-context.json"
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Set up the same Rtools 42 compiler
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
+        with:
+          r-version: '4.6.2'
+          rtools-version: '42'
+          update-rtools: true
+
+      - name: Match compiler discovery and install the validation dependency
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'C:/rtools42/x86_64-w64-mingw32.static.posix/bin'
+          foreach ($name in @('gcc', 'g++', 'gfortran')) {
+            Copy-Item "$root/$name.exe" "$root/x86_64-w64-mingw32-$name.exe" -Force
+          }
+          $cxx = (Get-Command g++ -ErrorAction Stop).Source
+          $version = & $cxx -dumpfullversion
+          if ($LASTEXITCODE -ne 0 -or $version.Trim() -ne '10.4.0') {
+            throw 'Expected original GCC 10.4.0'
+          }
+          "SPATIAL_TEST_CXX=$cxx" >> $env:GITHUB_ENV
+          @("compiler=$cxx", "version=$version") | Set-Content 'build/windows-tls-key-reuse/compiler.txt'
+          python -m pip install psutil==7.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Validation dependency installation failed' }
+
+      - name: Verify fail-closed observation and archive-selection checks
+        run: |
+          python -m unittest discover -s scripts/windows-shutdown/tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s scripts/windows-shutdown -p 'test_*.py' -v
+          exit $LASTEXITCODE
+
+      - name: Prepare the original GCC inputs and unchanged shutdown guard
+        run: |
+          python scripts/windows-shutdown/prepare_runtime.py --output build/windows-tls-key-reuse/runtime
+          exit $LASTEXITCODE
+
+      - name: Prepare and audit the same three private pthread families
+        timeout-minutes: 10
+        run: |
+          python scripts/windows-shutdown/prepare_pthread_archives.py `
+            --cxx "$env:SPATIAL_TEST_CXX" --output build/windows-tls-key-reuse/pthread
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python scripts/windows-shutdown/verify_pthread_build.py `
+            --preparation build/windows-tls-key-reuse/pthread --check-preparation `
+            --output build/windows-tls-key-reuse/preparation-before.json
+          exit $LASTEXITCODE
+
+      - name: Observe all 36 paired key-lifetime cases
+        timeout-minutes: 25
+        run: |
+          ./scripts/windows-shutdown/run_tls_key_reuse.ps1 `
+            -Cxx "$env:SPATIAL_TEST_CXX" -OutputDirectory 'build/windows-tls-key-reuse'
+          exit $LASTEXITCODE
+
+      - name: Recheck every installed input and private archive
+        if: always()
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = 'build/windows-tls-key-reuse'
+          if (-not (Test-Path "$output/pthread/manifest.json")) {
+            throw 'Preparation did not complete; input integrity cannot be certified'
+          }
+          python scripts/windows-shutdown/verify_pthread_build.py `
+            --preparation "$output/pthread" --check-preparation --output "$output/preparation-after.json"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $before = Get-Content "$output/preparation-before.json" -Raw | ConvertFrom-Json
+          $after = Get-Content "$output/preparation-after.json" -Raw | ConvertFrom-Json
+          if ($before.prep_manifest_sha256 -ne $after.prep_manifest_sha256) {
+            throw 'Preparation manifest changed during the experiment'
+          }
+
+      - name: Preserve exact sources, private archives, objects, maps and outcomes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-tls-key-reuse-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/windows-tls-key-reuse
+          if-no-files-found: error
+          retention-days: 90
