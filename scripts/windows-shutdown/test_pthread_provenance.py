@@ -125,14 +125,15 @@ class PrivatePthreadProvenanceTests(unittest.TestCase):
             for name in ("libpthread.a", "libwinpthread.a"):
                 for field, folder in (("compiler_default_thread_runtime_archives", installed),
                                       ("thread_runtime_archives", private if use_private else installed)):
-                    path = folder / name
+                    # Windows TEMP may use an 8.3 alias such as RUNNER~1.
+                    path = (folder / name).resolve(strict=True)
                     self.assertEqual(summary[field][name], {
                         "path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
                     })
             queries = [call for call in calls if any(arg.startswith("-print-file-name=") for arg in call)]
             self.assertTrue(queries)
             self.assertFalse(any(arg.startswith("-L") for call in queries for arg in call))
-            self.assertEqual(f"-L{private}" in calls[-1], use_private)
+            self.assertEqual(f"-L{private.resolve(strict=True)}" in calls[-1], use_private)
 
     def test_private_driver_input_is_independent_of_compiler_default_lookup(self):
         self.check_driver_inputs(True)
