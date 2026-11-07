@@ -2,12 +2,14 @@ param(
     [string]$RuntimeSources = 'build/windows-shutdown/runtime',
     [string]$OutputDirectory = 'build/windows-shutdown',
     [ValidateRange(1, 1000)][int]$Attempts = 30,
-    [ValidateRange(1, 1000)][int]$ControlAttempts = 5
+    [ValidateRange(1, 1000)][int]$ControlAttempts = 5,
+    [string]$PthreadPreparation = ''
 )
 
 # This is experiment orchestration, not a software-test success gate. Each
 # native/R/SQL test retains its actual status. assess_experiment.py makes the
-# final comparison after all three arms have been collected.
+# original three-arm comparison. The optional prepared-pthread comparison
+# collects six arms for its separate assessor without changing those drivers.
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
@@ -47,9 +49,28 @@ $nm = Join-Path (Split-Path $compiler) 'nm.exe'
 $objdump = Join-Path (Split-Path $compiler) 'objdump.exe'
 $compilerVersion = (& $compiler -dumpfullversion).Trim()
 if ($compilerVersion -ne '10.4.0') { throw "Expected GCC 10.4.0, found $compilerVersion" }
+$compilerHash = (Get-FileHash -Algorithm SHA256 $compiler).Hash.ToLowerInvariant()
 $vcpkgCommit = (& git -C $env:VCPKG_ROOT rev-parse HEAD).Trim()
 if ($vcpkgCommit -ne 'cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3') {
     throw 'Expected the same vcpkg revision as the upstream Spatial build'
+}
+
+$pthreadRoot = $null
+$pthreadManifestHash = $null
+if ($PthreadPreparation) {
+    $pthreadRoot = (Resolve-Path -LiteralPath $PthreadPreparation).Path
+    $pthreadManifestHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $pthreadRoot 'manifest.json')).Hash.ToLowerInvariant()
+    $beforeProof = Join-Path $outputRoot 'pthread-preparation-before.json'
+    Invoke-LoggedNative -Executable 'python' -Arguments @(
+        'scripts/windows-shutdown/verify_pthread_build.py', '--preparation', $pthreadRoot,
+        '--check-preparation', '--output', $beforeProof
+    ) -LogPath (Join-Path $outputRoot 'pthread-preparation-before.log') -Check | Out-Null
+    $prepared = Get-Content -LiteralPath $beforeProof -Raw | ConvertFrom-Json
+    if ($prepared.passed -ne $true -or $prepared.prep_manifest_sha256 -ne $pthreadManifestHash `
+        -or $prepared.compiler.sha256 -ne $compilerHash `
+        -or (Resolve-Path -LiteralPath $prepared.compiler.path).Path -ne (Resolve-Path -LiteralPath $compiler).Path) {
+        throw 'Prepared pthread archives must match the exact current compiler and retained manifest'
+    }
 }
 
 $archiveRecords = @()
@@ -71,9 +92,13 @@ $provenance = @{
     duckdb_commit = $duckdbCommit; ci_tools_commit = $ciToolsCommit
     duckdb_version = $env:DUCKDB_VERSION; platform = $env:DUCKDB_PLATFORM
     compiler_path = $compiler; compiler_version = $compilerVersion
-    compiler_sha256 = (Get-FileHash -Algorithm SHA256 $compiler).Hash.ToLowerInvariant()
+    compiler_sha256 = $compilerHash
     archives = $archiveRecords; runner_image = $env:ImageOS; runner_image_version = $env:ImageVersion
     vcpkg_commit = $vcpkgCommit
+}
+if ($pthreadRoot) {
+    $provenance.pthread_preparation = $pthreadRoot
+    $provenance.pthread_preparation_manifest_sha256 = $pthreadManifestHash
 }
 $provenance | ConvertTo-Json -Depth 10 | Set-Content -Encoding utf8 (Join-Path $outputRoot 'build-provenance.json')
 Invoke-LoggedNative -Executable $compiler -Arguments @('-v') -LogPath (Join-Path $outputRoot 'compiler-version.log') -Check | Out-Null
@@ -82,81 +107,139 @@ $env:EXT_FLAGS = '-DVCPKG_APPLOCAL_DEPS=OFF -DCMAKE_C_COMPILER_LAUNCHER=ccache -
 $binary = Join-Path $sourceRoot 'build/release/extension/spatial/spatial.duckdb_extension'
 $repositoryBinary = Join-Path $sourceRoot 'build/release/repository/v2.0.0/windows_amd64_mingw/spatial.duckdb_extension'
 $runner = Join-Path $sourceRoot 'build/release/test/unittest.exe'
-$arms = @(
-    @{ name = 'upstream'; source = '' },
-    @{ name = 'rebuilt-baseline'; source = (Join-Path $runtimeRoot 'baseline.cc') },
-    @{ name = 'guarded'; source = (Join-Path $runtimeRoot 'guarded.cc') }
-)
-foreach ($arm in $arms) {
-    $armDirectory = Join-Path $outputRoot $arm.name
-    New-Item -ItemType Directory -Force $armDirectory | Out-Null
-    $runtimeSource = $arm.source.Replace('\', '/')
-    $linkMap = (Join-Path $armDirectory 'spatial-link.map').Replace('\', '/')
-    # Reconfigure one tree: dependencies, compiler and ordinary build options
-    # are identical. A full release build also refreshes the local repository.
-    $flags = "-DSPATIAL_MINGW_TLS_ATEXIT_SOURCE=$runtimeSource -DSPATIAL_MINGW_LINK_MAP=$linkMap"
-    Invoke-LoggedNative -Executable 'make' -Arguments @('release', "EXT_RELEASE_FLAGS=$flags") `
-        -LogPath (Join-Path $armDirectory 'build.log') -Check | Out-Null
+if ($pthreadRoot) {
+    $arms = @(
+        @{ name = 'original'; pthread_arm = 'original'; gcc_arm = 'archive'; source = '' },
+        @{ name = 'rebuilt-control'; pthread_arm = 'rebuilt-baseline'; gcc_arm = 'baseline'; source = (Join-Path $runtimeRoot 'baseline.cc') },
+        @{ name = 'order-only'; pthread_arm = 'reverse-order'; gcc_arm = 'baseline'; source = (Join-Path $runtimeRoot 'baseline.cc') },
+        @{ name = 'guard-only'; pthread_arm = 'rebuilt-baseline'; gcc_arm = 'guarded'; source = (Join-Path $runtimeRoot 'guarded.cc') },
+        @{ name = 'combined'; pthread_arm = 'reverse-order'; gcc_arm = 'guarded'; source = (Join-Path $runtimeRoot 'guarded.cc') },
+        @{ name = 'order-only-archive'; pthread_arm = 'reverse-order'; gcc_arm = 'archive'; source = '' }
+    )
+} else {
+    $arms = @(
+        @{ name = 'upstream'; pthread_arm = $null; gcc_arm = 'archive'; source = '' },
+        @{ name = 'rebuilt-baseline'; pthread_arm = $null; gcc_arm = 'baseline'; source = (Join-Path $runtimeRoot 'baseline.cc') },
+        @{ name = 'guarded'; pthread_arm = $null; gcc_arm = 'guarded'; source = (Join-Path $runtimeRoot 'guarded.cc') }
+    )
+}
 
-    if ((Get-Content 'build/release/duckdb_platform_out' -Raw).Trim() -ne 'windows_amd64_mingw') {
-        throw 'Build output reports the wrong extension ABI/platform'
+function Write-PthreadBuildProof {
+    param([string]$ArmDirectory, [string]$PthreadArm, [string]$Phase, [string]$ExpectedBinaryHash)
+    $proofPath = Join-Path $ArmDirectory "$Phase.json"
+    Invoke-LoggedNative -Executable 'python' -Arguments @(
+        'scripts/windows-shutdown/verify_pthread_build.py', '--preparation', $pthreadRoot,
+        '--pthread-arm', $PthreadArm, '--extension', (Join-Path $ArmDirectory 'spatial.duckdb_extension'),
+        '--link-map', (Join-Path $ArmDirectory 'spatial-link.map'),
+        '--symbols', (Join-Path $ArmDirectory 'defined-symbols.txt'), '--output', $proofPath
+    ) -LogPath (Join-Path $ArmDirectory "$Phase.log") -Check | Out-Null
+    $proof = Get-Content -LiteralPath $proofPath -Raw | ConvertFrom-Json
+    if ($proof.passed -ne $true -or $proof.extension_sha256 -ne $ExpectedBinaryHash `
+        -or $proof.prep_manifest_sha256 -ne $pthreadManifestHash) {
+        throw 'Prepared manifest or selected extension changed during the pthread comparison'
     }
-    foreach ($required in @($binary, $repositoryBinary, $runner, $linkMap)) {
-        if (-not (Test-Path -LiteralPath $required)) { throw "Missing build output: $required" }
-    }
-    $archiveBinary = Join-Path $armDirectory 'spatial.duckdb_extension'
-    Copy-Item -LiteralPath $binary -Destination $archiveBinary
-    $binaryHash = (Get-FileHash -Algorithm SHA256 $archiveBinary).Hash.ToLowerInvariant()
-    if ((Get-FileHash -Algorithm SHA256 $repositoryBinary).Hash.ToLowerInvariant() -ne $binaryHash) {
-        throw 'Build repository contains a different DLL from this experiment arm'
-    }
-    Copy-Item 'build/release/CMakeCache.txt' (Join-Path $armDirectory 'CMakeCache.txt')
-    Copy-Item 'build/release/compile_commands.json' (Join-Path $armDirectory 'compile_commands.json')
-    Copy-Item 'build/release/build.ninja' (Join-Path $armDirectory 'build.ninja')
-    $symbolsPath = Join-Path $armDirectory 'defined-symbols.txt'
-    Invoke-LoggedNative -Executable $nm -Arguments @('--defined-only', $archiveBinary) `
-        -LogPath $symbolsPath -Check -Quiet | Out-Null
-    $definitions = @(Select-String -LiteralPath $symbolsPath -Pattern '^\s*[0-9a-fA-F]+\s+[Tt]\s+__cxa_thread_atexit\s*$')
-    if ($definitions.Count -ne 1) {
-        throw "Expected one __cxa_thread_atexit definition, found $($definitions.Count)"
-    }
-    Invoke-LoggedNative -Executable $objdump -Arguments @('-p', $archiveBinary) `
-        -LogPath (Join-Path $armDirectory 'pe-headers.txt') -Check -Quiet | Out-Null
-    $mapText = Get-Content -LiteralPath $linkMap -Raw
-    if ($arm.name -eq 'upstream') {
-        if ($mapText -notmatch 'libstdc\+\+\.a\([^)]*atexit_thread\.(?:o|obj)\)') {
-            throw 'The unmodified arm did not select the compiler archive atexit_thread.o'
-        }
-    } else {
-        $sourceName = [System.IO.Path]::GetFileName($arm.source)
-        if ($mapText -notmatch ([regex]::Escape($sourceName) + '\.(obj|o)')) {
-            throw 'The supplied runtime source object is absent from the extension link map'
-        }
-        if ($mapText -match 'libstdc\+\+\.a\([^)]*atexit_thread\.(?:o|obj)\)') {
-            throw 'Compiler archive atexit_thread.o was linked alongside the supplied runtime source'
-        }
-    }
+}
 
-    $rCode = Invoke-LoggedNative -Executable 'python' -Arguments @(
-        'scripts/windows-shutdown/run_spatial.py', '--extension', $archiveBinary,
-        '--inputs', $runtimeRoot,
-        '--output', (Join-Path $armDirectory 'r'), '--attempts', "$Attempts",
-        '--control-attempts', "$ControlAttempts"
-    ) -LogPath (Join-Path $armDirectory 'r-supervisor.log')
-    $sqlCode = Invoke-LoggedNative -Executable 'python' -Arguments @(
-        'scripts/windows-shutdown/run_sql_tests.py', '--runner', $runner,
-        '--extension', $archiveBinary, '--repository-extension', $repositoryBinary,
-        '--output', (Join-Path $armDirectory 'sql')
-    ) -LogPath (Join-Path $armDirectory 'sql-supervisor.log')
-    $runtimeHash = if ($arm.source) {
-        (Get-FileHash -Algorithm SHA256 $arm.source).Hash.ToLowerInvariant()
-    } else { $null }
-    @{
-        arm = $arm.name; build_completed = $true; runtime_source = $arm.source
-        runtime_source_sha256 = $runtimeHash; extension_sha256 = $binaryHash
-        r_exit_code = $rCode; sql_exit_code = $sqlCode
-        note = 'Test failures are retained. Completion of this arm is not a software pass.'
-    } | ConvertTo-Json -Depth 10 | Set-Content -Encoding utf8 (Join-Path $armDirectory 'arm-result.json')
+try {
+    foreach ($arm in $arms) {
+        $armDirectory = Join-Path $outputRoot $arm.name
+        New-Item -ItemType Directory -Force $armDirectory | Out-Null
+        $runtimeSource = $arm.source.Replace('\', '/')
+        $pthreadLibrary = if ($pthreadRoot) {
+            (Join-Path (Join-Path $pthreadRoot $arm.pthread_arm) 'lib').Replace('\', '/')
+        } else { '' }
+        $linkMap = (Join-Path $armDirectory 'spatial-link.map').Replace('\', '/')
+        # Reconfigure one tree: dependencies, compiler and ordinary build options
+        # are identical. A full release build also refreshes the local repository.
+        # Explicitly clear the optional archive directory in the original mode,
+        # including when a caller reuses a previously configured experiment tree.
+        $flags = "-DSPATIAL_MINGW_TLS_ATEXIT_SOURCE=$runtimeSource -DSPATIAL_MINGW_LINK_MAP=$linkMap -DSPATIAL_MINGW_PTHREAD_LIBRARY_DIR=$pthreadLibrary"
+        Invoke-LoggedNative -Executable 'make' -Arguments @('release', "EXT_RELEASE_FLAGS=$flags") `
+            -LogPath (Join-Path $armDirectory 'build.log') -Check | Out-Null
+
+        if ((Get-Content 'build/release/duckdb_platform_out' -Raw).Trim() -ne 'windows_amd64_mingw') {
+            throw 'Build output reports the wrong extension ABI/platform'
+        }
+        foreach ($required in @($binary, $repositoryBinary, $runner, $linkMap)) {
+            if (-not (Test-Path -LiteralPath $required)) { throw "Missing build output: $required" }
+        }
+        $archiveBinary = Join-Path $armDirectory 'spatial.duckdb_extension'
+        Copy-Item -LiteralPath $binary -Destination $archiveBinary
+        $binaryHash = (Get-FileHash -Algorithm SHA256 $archiveBinary).Hash.ToLowerInvariant()
+        if ((Get-FileHash -Algorithm SHA256 $repositoryBinary).Hash.ToLowerInvariant() -ne $binaryHash) {
+            throw 'Build repository contains a different DLL from this experiment arm'
+        }
+        Copy-Item 'build/release/CMakeCache.txt' (Join-Path $armDirectory 'CMakeCache.txt')
+        Copy-Item 'build/release/compile_commands.json' (Join-Path $armDirectory 'compile_commands.json')
+        Copy-Item 'build/release/build.ninja' (Join-Path $armDirectory 'build.ninja')
+        $symbolsPath = Join-Path $armDirectory 'defined-symbols.txt'
+        Invoke-LoggedNative -Executable $nm -Arguments @('--defined-only', $archiveBinary) `
+            -LogPath $symbolsPath -Check -Quiet | Out-Null
+        $definitions = @(Select-String -LiteralPath $symbolsPath -Pattern '^\s*[0-9a-fA-F]+\s+[Tt]\s+__cxa_thread_atexit\s*$')
+        if ($definitions.Count -ne 1) {
+            throw "Expected one __cxa_thread_atexit definition, found $($definitions.Count)"
+        }
+        Invoke-LoggedNative -Executable $objdump -Arguments @('-p', $archiveBinary) `
+            -LogPath (Join-Path $armDirectory 'pe-headers.txt') -Check -Quiet | Out-Null
+        $mapText = Get-Content -LiteralPath $linkMap -Raw
+        if ($arm.gcc_arm -eq 'archive') {
+            if ($mapText -notmatch 'libstdc\+\+\.a\([^)]*atexit_thread\.(?:o|obj)\)') {
+                throw 'The unmodified arm did not select the compiler archive atexit_thread.o'
+            }
+        } else {
+            $sourceName = [System.IO.Path]::GetFileName($arm.source)
+            if ($mapText -notmatch ([regex]::Escape($sourceName) + '\.(obj|o)')) {
+                throw 'The supplied runtime source object is absent from the extension link map'
+            }
+            if ($mapText -match 'libstdc\+\+\.a\([^)]*atexit_thread\.(?:o|obj)\)') {
+                throw 'Compiler archive atexit_thread.o was linked alongside the supplied runtime source'
+            }
+        }
+
+        if ($pthreadRoot) {
+            Write-PthreadBuildProof -ArmDirectory $armDirectory -PthreadArm $arm.pthread_arm `
+                -Phase 'pthread-link-proof-before-tests' -ExpectedBinaryHash $binaryHash
+        }
+
+        $rCode = Invoke-LoggedNative -Executable 'python' -Arguments @(
+            'scripts/windows-shutdown/run_spatial.py', '--extension', $archiveBinary,
+            '--inputs', $runtimeRoot,
+            '--output', (Join-Path $armDirectory 'r'), '--attempts', "$Attempts",
+            '--control-attempts', "$ControlAttempts"
+        ) -LogPath (Join-Path $armDirectory 'r-supervisor.log')
+        $sqlCode = Invoke-LoggedNative -Executable 'python' -Arguments @(
+            'scripts/windows-shutdown/run_sql_tests.py', '--runner', $runner,
+            '--extension', $archiveBinary, '--repository-extension', $repositoryBinary,
+            '--output', (Join-Path $armDirectory 'sql')
+        ) -LogPath (Join-Path $armDirectory 'sql-supervisor.log')
+        $runtimeHash = if ($arm.source) {
+            (Get-FileHash -Algorithm SHA256 $arm.source).Hash.ToLowerInvariant()
+        } else { $null }
+        @{
+            arm = $arm.name; build_completed = $true; runtime_source = $arm.source
+            runtime_source_sha256 = $runtimeHash; extension_sha256 = $binaryHash
+            pthread_arm = $arm.pthread_arm; gcc_arm = $arm.gcc_arm
+            r_exit_code = $rCode; sql_exit_code = $sqlCode
+            note = 'Test failures are retained. Completion of this arm is not a software pass.'
+        } | ConvertTo-Json -Depth 10 | Set-Content -Encoding utf8 (Join-Path $armDirectory 'arm-result.json')
+        if ($pthreadRoot) {
+            Write-PthreadBuildProof -ArmDirectory $armDirectory -PthreadArm $arm.pthread_arm `
+                -Phase 'pthread-link-proof' -ExpectedBinaryHash $binaryHash
+        }
+    }
+} finally {
+    if ($pthreadRoot) {
+        $afterProof = Join-Path $outputRoot 'pthread-preparation-after.json'
+        Invoke-LoggedNative -Executable 'python' -Arguments @(
+            'scripts/windows-shutdown/verify_pthread_build.py', '--preparation', $pthreadRoot,
+            '--check-preparation', '--output', $afterProof
+        ) -LogPath (Join-Path $outputRoot 'pthread-preparation-after.log') -Check | Out-Null
+        $after = Get-Content -LiteralPath $afterProof -Raw | ConvertFrom-Json
+        if ($after.passed -ne $true -or $after.prep_manifest_sha256 -ne $pthreadManifestHash `
+            -or $after.compiler.sha256 -ne $compilerHash) {
+            throw 'Prepared archives or installed inputs changed during the comparison'
+        }
+    }
 }
 
 # Assert that the experiment did not patch the compiler installation in place.

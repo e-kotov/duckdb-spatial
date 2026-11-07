@@ -122,6 +122,32 @@ if(SPATIAL_MINGW_TLS_ATEXIT_SOURCE)
                  PRIVATE "${SPATIAL_MINGW_TLS_ATEXIT_SOURCE}")
 endif()
 
+# Optional private pthread archives for the controlled runtime comparison.
+# Only the loadable Spatial DLL receives this search path; other targets and
+# the compiler installation retain their original link behavior.
+set(SPATIAL_MINGW_PTHREAD_LIBRARY_DIR "" CACHE PATH
+    "Experimental private pthread archive directory for the MinGW Spatial DLL")
+if(SPATIAL_MINGW_PTHREAD_LIBRARY_DIR)
+  if(NOT MINGW OR NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
+     NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "10.4.0")
+    message(FATAL_ERROR "The pthread archive experiment requires MinGW GCC 10.4.0")
+  endif()
+  get_filename_component(SPATIAL_MINGW_PTHREAD_LIBRARY_DIR
+                         "${SPATIAL_MINGW_PTHREAD_LIBRARY_DIR}" ABSOLUTE)
+  if(NOT IS_DIRECTORY "${SPATIAL_MINGW_PTHREAD_LIBRARY_DIR}")
+    message(FATAL_ERROR "Experimental pthread archive directory does not exist")
+  endif()
+  foreach(SPATIAL_PTHREAD_ARCHIVE libpthread.a libwinpthread.a)
+    if(NOT EXISTS "${SPATIAL_MINGW_PTHREAD_LIBRARY_DIR}/${SPATIAL_PTHREAD_ARCHIVE}" OR
+       IS_DIRECTORY "${SPATIAL_MINGW_PTHREAD_LIBRARY_DIR}/${SPATIAL_PTHREAD_ARCHIVE}")
+      message(FATAL_ERROR "Experimental pthread directory requires both static archives")
+    endif()
+  endforeach()
+  # LINK_FLAGS is target-local and supported by the project's CMake 3.5 minimum.
+  set_property(TARGET ${TARGET_NAME}_loadable_extension APPEND_STRING PROPERTY
+               LINK_FLAGS " -L\"${SPATIAL_MINGW_PTHREAD_LIBRARY_DIR}\"")
+endif()
+
 # A link map proves which runtime object supplies __cxa_thread_atexit in each
 # experimental arm, including the untouched archive arm. No default link flags.
 set(SPATIAL_MINGW_LINK_MAP "" CACHE FILEPATH "Optional MinGW runtime experiment link map")

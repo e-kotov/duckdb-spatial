@@ -1,0 +1,224 @@
+name: Windows Spatial pthread ordering comparison
+
+# Six explicit arms distinguish the accepted MinGW ordering change, the GCC
+# final-shutdown guard, their combination, and rebuilding alone. All writes,
+# experiments and review stay in the fork. Default distribution builds are not
+# altered by this workflow.
+on:
+  push:
+    branches: [test/windows-pthread-spatial-20261107]
+    paths:
+      - 'CMakeLists.txt'
+      - 'scripts/windows-shutdown/**'
+      - '.github/workflows/windows-pthread-spatial.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-pthread-spatial-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    name: Original, rebuilt, ordering-only, guard-only and combined runtimes
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CC: gcc
+      CXX: g++
+      GEN: ninja
+      DUCKDB_COMMIT: d54cbbe3df17e8e5ce68312f483b4155836112aa
+      DUCKDB_VERSION: v2.0.0
+      DUCKDB_PLATFORM: windows_amd64_mingw
+      DUCKDB_PLATFORM_RTOOLS: '1'
+      ENABLE_EXTENSION_AUTOINSTALL: '1'
+      ENABLE_EXTENSION_AUTOLOADING: '1'
+      VCPKG_TARGET_TRIPLET: x64-mingw-static
+      VCPKG_HOST_TRIPLET: x64-mingw-static
+      VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-cache.duckdb.org,read
+      VCPKG_OVERLAY_PORTS: ${{ github.workspace }}/extension-ci-tools/vcpkg_ports
+      CMAKE_BUILD_PARALLEL_LEVEL: '4'
+
+    steps:
+      - name: Check out the experiment and unchanged pinned submodules
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Preserve source and run identity before setup
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = 'build/windows-pthread-spatial'
+          New-Item -ItemType Directory -Force -Path "$output/source" | Out-Null
+          Copy-Item 'scripts/windows-shutdown' "$output/source" -Recurse
+          Copy-Item @('CMakeLists.txt', '.github/workflows/windows-pthread-spatial.yml') "$output/source"
+          foreach ($script in @('scripts/windows-shutdown/build_and_test.ps1',
+                                'scripts/windows-shutdown/run_pthread_controls.ps1')) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile(
+              (Resolve-Path $script).Path, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -ne 0) {
+              $parseErrors | Format-List | Out-String | Write-Host
+              throw "PowerShell parser rejected $script"
+            }
+          }
+          @{
+            repository = $env:GITHUB_REPOSITORY
+            ref = $env:GITHUB_REF
+            commit = $env:GITHUB_SHA
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            runner_os = $env:RUNNER_OS
+            runner_image = $env:ImageOS
+            runner_image_version = $env:ImageVersion
+          } | ConvertTo-Json | Set-Content "$output/run-context.json"
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      # Keep the original ordering because Rtools curl/zstd can affect ccache.
+      - name: Reuse the original compiler cache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          max-size: 5GB
+          evict-old-files: job
+          key: spatial-shutdown-rtools42-v1
+
+      - name: Set up the reproduced R host and original Rtools 42 compiler
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
+        with:
+          r-version: '4.6.2'
+          rtools-version: '42'
+          update-rtools: true
+
+      - name: Match original compiler discovery and short vcpkg path
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'C:/rtools42/x86_64-w64-mingw32.static.posix/bin'
+          # R's documented toolchain recipe revision, when supplied by the installer.
+          # This complements the mandatory compiler/archive hashes; it is not a gate.
+          $marker = 'C:/rtools42/x86_64-w64-mingw32.static.posix/.version'
+          $versionRecord = @{ path = $marker; present = (Test-Path -LiteralPath $marker -PathType Leaf) }
+          if ($versionRecord.present) {
+            Copy-Item -LiteralPath $marker -Destination 'build/windows-pthread-spatial/rtools-toolchain-version.txt'
+            $versionRecord.sha256 = (Get-FileHash -LiteralPath $marker -Algorithm SHA256).Hash.ToLower()
+            $versionRecord.content = Get-Content -LiteralPath $marker -Raw
+          }
+          $versionRecord | ConvertTo-Json | Set-Content 'build/windows-pthread-spatial/rtools-toolchain-version.json'
+          foreach ($name in @('gcc', 'g++', 'gfortran')) {
+            Copy-Item "$root/$name.exe" "$root/x86_64-w64-mingw32-$name.exe" -Force
+          }
+          if (Test-Path 'C:/rtools42/usr/bin/zstd.exe') {
+            Move-Item 'C:/rtools42/usr/bin/zstd.exe' 'C:/rtools42/usr/bin/zstd-rtools.exe' -Force
+          }
+          $cxx = (Get-Command g++ -ErrorAction Stop).Source
+          $version = & $cxx -dumpfullversion
+          if ($LASTEXITCODE -ne 0 -or $version.Trim() -ne '10.4.0') {
+            throw 'Expected original GCC 10.4.0'
+          }
+          "SPATIAL_TEST_CXX=$cxx" >> $env:GITHUB_ENV
+          $base = Split-Path (Split-Path $env:GITHUB_WORKSPACE -Parent) -Parent
+          $vcpkg = "$base/vcpkg"
+          "VCPKG_ROOT=$vcpkg" >> $env:GITHUB_ENV
+          "VCPKG_TOOLCHAIN_PATH=$vcpkg/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+          choco install ninja -y
+          if ($LASTEXITCODE -ne 0) { throw 'Ninja installation failed' }
+          python -m pip install psutil==7.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Process inspection helper installation failed' }
+
+      - name: Check rejection of incomplete and misleading test evidence
+        run: |
+          python -m unittest discover -s scripts/windows-shutdown/tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s scripts/windows-shutdown -p 'test_*.py' -v
+          exit $LASTEXITCODE
+
+      - name: Prepare immutable original inputs and both GCC sources
+        run: |
+          python scripts/windows-shutdown/prepare_runtime.py --output build/windows-pthread-spatial/runtime
+          exit $LASTEXITCODE
+
+      - name: Prepare isolated original, rebuilt and reverse-order pthread archives
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/windows-shutdown/prepare_pthread_archives.py `
+            --cxx "$env:SPATIAL_TEST_CXX" --output build/windows-pthread-spatial/pthread
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $manifest = Get-Content 'build/windows-pthread-spatial/pthread/manifest.json' -Raw | ConvertFrom-Json
+          if ($manifest.status -ne 'prepared' -or $manifest.native_preparation_passed -ne $true `
+              -or $manifest.installed_inputs_unchanged -ne $true) {
+            throw 'Actual native preparation and immutable installed-input checks must pass'
+          }
+
+      - name: Verify actual storage order and normal cleanup before building Spatial
+        timeout-minutes: 15
+        run: |
+          ./scripts/windows-shutdown/run_pthread_controls.ps1
+          exit $LASTEXITCODE
+
+      - name: Preserve early native observations and exact private runtime archives
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-pthread-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/windows-pthread-spatial
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Set up the original pinned vcpkg dependency build
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11.6
+        with:
+          vcpkgGitCommitId: cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3
+          vcpkgDirectory: ${{ env.VCPKG_ROOT }}
+
+      - name: Install and verify the reproduced R package versions
+        shell: Rscript {0}
+        run: |
+          stopifnot(as.character(getRversion()) == '4.6.2')
+          install.packages(c('DBI', 'duckdb'), repos = 'https://cloud.r-project.org', type = 'binary')
+          stopifnot(as.character(packageVersion('DBI')) == '1.3.0')
+          stopifnot(as.character(packageVersion('duckdb')) == '2.0.0')
+          writeLines(capture.output(sessionInfo()), 'build/windows-pthread-spatial/r-session.txt')
+          dlls <- list.files(system.file('libs', package = 'duckdb'), full.names = TRUE,
+                            recursive = TRUE, pattern = '\\.dll$')
+          write.csv(data.frame(path = dlls, md5 = unname(tools::md5sum(dlls))),
+                    'build/windows-pthread-spatial/r-duckdb-binaries.csv', row.names = FALSE)
+
+      - name: Build six matched arms and retain every real R and SQL outcome
+        timeout-minutes: 200
+        run: |
+          ./scripts/windows-shutdown/build_and_test.ps1 `
+            -RuntimeSources build/windows-pthread-spatial/runtime `
+            -PthreadPreparation build/windows-pthread-spatial/pthread `
+            -OutputDirectory build/windows-pthread-spatial `
+            -Attempts 30 -ControlAttempts 5
+          exit $LASTEXITCODE
+
+      - name: Assess ordering-only and combined changes without hiding failed exits
+        if: always()
+        run: |
+          python scripts/windows-shutdown/assess_pthread_spatial.py --root build/windows-pthread-spatial
+          exit $LASTEXITCODE
+
+      - name: Preserve exact Spatial binaries, maps, runtime inputs and all outcomes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-pthread-spatial-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/windows-pthread-spatial
+            !build/windows-pthread-spatial/**/extensions/**
+            !build/windows-pthread-spatial/**/inst/spatial/countries.geojson
+          if-no-files-found: error
+          retention-days: 90
