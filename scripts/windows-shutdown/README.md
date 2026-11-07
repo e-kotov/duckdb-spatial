@@ -2,7 +2,7 @@
 
 ## Status, 7 November 2026
 
-**Candidate implemented; actual Windows compilation and execution are pending.**
+**Candidate implemented; full Windows Spatial validation is pending.**
 This is an opt-in experiment, not a demonstrated fix or an upstream submission.
 The ordinary Spatial build and distribution workflow are unchanged when the
 new experiment options are unset. No thread default, existing test, or cleanup
@@ -16,6 +16,13 @@ and any draft PR belong exclusively in that fork. Do not open a PR against or
 push changes to `duckdb/duckdb-spatial`. No merge is authorized.
 Do not reinterpret local checks as Windows validation or create a
 production-fix PR on that basis.
+
+The initial [Windows run 42375674793](https://github.com/e-kotov/duckdb-spatial/actions/runs/42375674793)
+at `dc61d2afc17b15996f2d8e5c1482308adf9c4c2a` passed setup and its original
+nine-case native fixture stage. The additional foreign-thread controls below
+were prepared afterward for the next run. The native stage's successful
+experiment includes two expected baseline hangs; those remain failed software
+exits. Its success does not establish a fix in the actual Spatial workload.
 
 ## Evidence reused
 
@@ -156,6 +163,18 @@ baselines must hang only after the recorded exit request; the guarded DLL must
 exit and preserve global/atexit cleanup. This synthetic mechanism fixture does
 not identify the original vanished thread or claim to reproduce its lifecycle.
 
+A separate `foreign-unload` control covers workers created by the C host using
+Windows `CreateThread`, outside the DLL's pthread creation path. Each worker
+touches the DLL's C++ TLS twice and returns normally. Before unloading the DLL,
+the host waits on every native thread handle, checks its zero exit code, and
+requires exactly one TLS destructor per worker. Sixteen cycles with eight
+workers must retain exact TLS/global/atexit counts and actual DLL unloading in
+all three variants. No hang is an expected result for this control. Its sentinel
+does not read its own emutls storage; the separate historical emutls storage
+lifetime defect remains outside this callback-execution check.
+The counters establish aggregate callback totals per cycle, not a callback-to-
+thread-ID trace or attribution of the original outstanding reader.
+
 For the real workload each arm runs **30 fresh default-thread R processes and
 five fresh single-thread controls**, plus a separate spatial smoke process.
 Every process retains all three original GeoJSON/Shapefile iterations and
@@ -205,9 +224,10 @@ platform checks before preparing a draft PR against the fork. Upstream
 submission and any merge require the user's approval.
 
 Local checks completed during preparation: exact source/hash and generated
-patch verification; Python compilation; fourteen adverse/positive gate tests;
+patch verification; Python compilation; sixteen adverse/positive gate tests;
 actual R parsing of both adapted programs; independent code review; YAML
 parsing; action-pin verification; and native Linux compilation of original and
-patched sources with identical executable `.text` bytes. These checks do not
-validate Windows compilation, PowerShell execution, Spatial's full build,
-macOS/Linux Spatial operations, or the shutdown fix.
+patched sources with identical executable `.text` bytes. These local checks do
+not validate Windows execution, Spatial's full build, macOS/Linux Spatial
+operations, or the shutdown fix. Actual Windows evidence is identified separately
+by its workflow run and source commit.

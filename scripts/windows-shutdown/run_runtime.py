@@ -11,7 +11,8 @@ The C host has no C++ runtime workload. Each DLL statically links the selected
 compiler's runtime, with either its original archive member, the supplied
 unmodified fallback source, or the supplied guarded source. Normal controls
 check real C++ thread_local destructor counts, user atexit callbacks, and global
-destructors across joined workers, main-thread exit, and repeated FreeLibrary.
+destructors across joined DLL-created and foreign workers, main-thread exit,
+and repeated FreeLibrary.
 """
 
 from __future__ import annotations
@@ -97,19 +98,25 @@ def assess(result: dict, *, variant: str, mode: str, markers: list[str],
     """Check cleanup evidence, not just exit codes or a printed success label."""
     counts = {name: markers.count(name) for name in (
         "CPP_TLS_DTOR", "GLOBAL_DTOR", "ATEXIT_CALLBACK", "UNLOAD_OK",
+        "FOREIGN_WORKERS_JOINED", "FOREIGN_UNLOAD_OK",
         "PROCESS_EXIT_REQUEST", "BLOCKED_DTOR_ENTER", "BLOCKED_DTOR_LEAVE",
         "BLOCK_SETUP_ERROR",
     )}
     expected_hang = mode == "abandoned-reader" and variant in ("archive", "baseline")
     exited_zero = not result["timed_out"] and result["returncode"] == 0
     checks = {"no_setup_error": counts["BLOCK_SETUP_ERROR"] == 0}
-    if mode == "unload":
+    if mode in ("unload", "foreign-unload"):
+        foreign = mode == "foreign-unload"
+        unload_marker = "FOREIGN_UNLOAD_OK" if foreign else "UNLOAD_OK"
+        other_unload_marker = "UNLOAD_OK" if foreign else "FOREIGN_UNLOAD_OK"
         checks.update({
             "process_exited_zero": exited_zero,
             "tls_destructors": counts["CPP_TLS_DTOR"] == cycles * workers,
             "global_destructors": counts["GLOBAL_DTOR"] == cycles,
             "atexit_callbacks": counts["ATEXIT_CALLBACK"] == cycles,
-            "host_verified_actual_unloads": counts["UNLOAD_OK"] == 1,
+            "host_verified_actual_unloads": counts[unload_marker] == 1,
+            "correct_worker_creation_mode": counts[other_unload_marker] == 0 and
+            counts["FOREIGN_WORKERS_JOINED"] == (cycles if foreign else 0),
             "no_process_exit_fixture": counts["PROCESS_EXIT_REQUEST"] == 0,
             "no_abandoned_reader": counts["BLOCKED_DTOR_ENTER"] == 0,
         })
@@ -305,7 +312,7 @@ def main() -> int:
         summary["binary_sha256"] = {str(path): digest(path) for path in (host, *dlls.values())}
         save()
 
-        for mode in ("unload", "main-exit", "abandoned-reader"):
+        for mode in ("unload", "foreign-unload", "main-exit", "abandoned-reader"):
             for variant, dll in dlls.items():
                 stem = f"{mode}-{variant}"
                 marker_path = output / f"{stem}.markers.log"
@@ -322,7 +329,7 @@ def main() -> int:
                 print(f"{variant}/{mode}: {assessed['classification']} "
                       f"({result['elapsed_seconds']:.3f}s)", flush=True)
         summary["candidate_validated_for_runtime_fixture"] = (
-            len(summary["results"]) == 9 and
+            len(summary["results"]) == 12 and
             all(result["experiment_expectation_met"] for result in summary["results"])
         )
         save()

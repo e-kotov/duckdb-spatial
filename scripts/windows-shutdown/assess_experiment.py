@@ -108,12 +108,12 @@ def assess_sql(summary: dict, extension_sha: str, guarded: bool) -> dict:
 
 def assess_native(summary: dict) -> dict:
     expected = {(variant, mode) for variant in ("archive", "baseline", "guarded")
-                for mode in ("unload", "main-exit", "abandoned-reader")}
+                for mode in ("unload", "foreign-unload", "main-exit", "abandoned-reader")}
     rows = summary.get("results", [])
     pairs = [(row.get("variant"), row.get("mode")) for row in rows]
     proofs = summary.get("link_proofs", {})
     checks = {
-        "complete_mechanism_and_cleanup_matrix": len(rows) == 9 and set(pairs) == expected,
+        "complete_mechanism_and_cleanup_matrix": len(rows) == len(expected) and set(pairs) == expected,
         "fixture_expectations_met": bool(rows) and all(row.get("experiment_expectation_met") is True for row in rows),
         "all_three_link_proofs": set(proofs) == {"archive", "baseline", "guarded"}
                                  and all(proof.get("passed") is True for proof in proofs.values()),

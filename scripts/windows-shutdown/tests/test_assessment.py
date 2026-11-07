@@ -52,7 +52,7 @@ def sql_summary(sha=SHA):
 def native_summary():
     rows = []
     for variant in ("archive", "baseline", "guarded"):
-        for mode in ("unload", "main-exit", "abandoned-reader"):
+        for mode in ("unload", "foreign-unload", "main-exit", "abandoned-reader"):
             hang = variant != "guarded" and mode == "abandoned-reader"
             rows.append({
                 "variant": variant, "mode": mode, "experiment_expectation_met": True,
@@ -133,6 +133,21 @@ class AssessmentTests(unittest.TestCase):
         data = native_summary()
         data["results"].pop()
         self.assertFalse(assess_native(data)["valid"])
+
+    def test_foreign_thread_cleanup_controls_required(self):
+        data = native_summary()
+        data["results"] = [row for row in data["results"] if row["mode"] != "foreign-unload"]
+        self.assertFalse(assess_native(data)["valid"])
+
+    def test_foreign_thread_cleanup_hang_is_never_expected(self):
+        for variant in ("archive", "baseline", "guarded"):
+            with self.subTest(variant=variant):
+                data = native_summary()
+                row = next(row for row in data["results"]
+                           if row["mode"] == "foreign-unload" and row["variant"] == variant)
+                row.update(classification="expected-diagnostic-hang",
+                           software_exit_passed=False, terminated_by_supervisor=True)
+                self.assertFalse(assess_native(data)["valid"])
 
     def test_no_windows_results_is_incomplete(self):
         with tempfile.TemporaryDirectory() as directory:
