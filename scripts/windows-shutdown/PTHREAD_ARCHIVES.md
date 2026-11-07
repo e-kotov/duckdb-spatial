@@ -66,6 +66,19 @@ the parser's bytes over the extracted file. This second failed attempt likewise
 does not establish any cleanup/storage-order result; all tracked installed
 inputs remained unchanged.
 
+The [third native attempt](https://github.com/e-kotov/duckdb-spatial/actions/runs/42395567467)
+completed preparation, including ABI, member replacement and installed-input
+hash checks. All six drivers then stopped before linking because their
+`-print-file-name=libpthread.a` query returned the installed archive even with
+`-L` pointing at the private directory. The raw Rtools42 commands demonstrate
+that this compiler lookup does not apply the linker's library search. The
+drivers now record and hash the compiler defaults separately, take requested
+private input paths from the validated directory, and require the actual DLL
+link map to prove private archive member selection. The unique pthread API
+definition checks and before/after input hashes remain mandatory. No cleanup or
+storage-order cases ran in that failed attempt; successful preparation alone
+does not establish either runtime outcome.
+
 `manifest.json` records the source identities, generated patch, tools, flags,
 included headers, observed layout, original and replacement objects, archive
 members and before/after hashes. Raw libraries, objects, preprocessed source,

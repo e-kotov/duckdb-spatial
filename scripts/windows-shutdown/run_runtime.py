@@ -242,15 +242,22 @@ def main() -> int:
         summary["runtime_archive"] = {"path": str(runtime_archive), "sha256": digest(runtime_archive)}
         summary["compiler_binary"] = {"path": cxx, "sha256": digest(Path(cxx))}
         summary["thread_runtime_archives"] = {}
+        summary["compiler_default_thread_runtime_archives"] = {}
         for library_name in ("libpthread.a", "libwinpthread.a"):
-            identified = command([cxx, *library_options, f"-print-file-name={library_name}"], output=output,
+            identified = command([cxx, f"-print-file-name={library_name}"], output=output,
                                  stem=f"compiler-{library_name}")
             summary["compiler_commands"].append(identified)
             if identified["returncode"] != 0:
                 raise RuntimeError(f"Could not identify {library_name}")
             library_path = Path(identified["stdout"].strip()).resolve(strict=True)
-            if private_archives and library_path != private_archives[library_name]:
-                raise RuntimeError(f"Compiler selected {library_name} outside the isolated directory")
+            summary["compiler_default_thread_runtime_archives"][library_name] = {
+                "path": str(library_path), "sha256": digest(library_path),
+            }
+            # GCC's -print-file-name query does not apply the linker's -L
+            # search. Record installed defaults separately from requested
+            # private inputs; the actual DLL link proof below is authoritative.
+            if private_archives:
+                library_path = private_archives[library_name]
             summary["thread_runtime_archives"][library_name] = {
                 "path": str(library_path), "sha256": digest(library_path),
             }

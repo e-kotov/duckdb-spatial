@@ -219,15 +219,11 @@ def main() -> int:
                 raise RuntimeError(f"Cannot locate {name}")
             path = Path(result["stdout"].strip()).resolve(strict=True)
             summary["compiler_default_runtime_archives"][name] = {"path": str(path), "sha256": digest(path)}
-            if pthread_directory and name in ("libpthread.a", "libwinpthread.a"):
-                selected = command([cxx, f"-L{pthread_directory}", f"-print-file-name={name}"],
-                                   output=output, stem=f"selected-{name}")
-                summary["commands"].append(selected)
-                if selected["returncode"] != 0:
-                    raise RuntimeError(f"Cannot locate selected {name}")
-                path = Path(selected["stdout"].strip()).resolve(strict=True)
-                if path != private_archives[name]:
-                    raise RuntimeError(f"Compiler selected {name} outside the isolated directory")
+            if name in private_archives:
+                # -print-file-name identifies compiler defaults, not -L
+                # selection. Require the validated private input here and
+                # prove the actual DLL provider from its map and symbols below.
+                path = private_archives[name]
             summary["runtime_archives"][name] = {"path": str(path), "sha256": digest(path)}
         tool_paths = {}
         for name in ("nm", "objdump"):
