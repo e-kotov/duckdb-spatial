@@ -54,6 +54,18 @@ of each macro. That failed attempt does not establish native preparation or
 any cleanup/storage-order result; its manifest records all 203 tracked installed
 inputs as unchanged.
 
+The [second native attempt](https://github.com/e-kotov/duckdb-spatial/actions/runs/42394535146)
+passed the ABI layout check and compiled both source rebuilds, then stopped at
+the independent archive-extraction check. The original 149,432-byte thread
+object contains 553 LF bytes; Rtools42 `ar p` emitted 149,985 bytes, exactly the
+original object with each LF expanded to CRLF on stdout. Independent `ar x`
+file extraction matches the parser's original payload byte for byte. Preparation
+therefore extracts with `ar x` into a fresh private directory and compares the
+actual extracted file to that payload. It never normalizes binary data or writes
+the parser's bytes over the extracted file. This second failed attempt likewise
+does not establish any cleanup/storage-order result; all tracked installed
+inputs remained unchanged.
+
 `manifest.json` records the source identities, generated patch, tools, flags,
 included headers, observed layout, original and replacement objects, archive
 members and before/after hashes. Raw libraries, objects, preprocessed source,

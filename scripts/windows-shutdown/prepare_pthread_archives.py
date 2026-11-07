@@ -323,6 +323,18 @@ class Preparation:
         require(provider in dict(members), "nm provider absent from archive")
         return members, provider
 
+    def extract_archive_member(self, path: Path, label: str, ar: Path, provider: str,
+                               expected: bytes, directory: Path) -> Path:
+        # Rtools42 ar p expands LF bytes to CRLF on stdout, including in COFF
+        # object data. Extract to a fresh private file; never normalize binaries.
+        directory.mkdir(parents=True)
+        self.run(label, [ar, "x", path.resolve(strict=True), provider], cwd=directory)
+        extracted = directory / provider
+        require(extracted.is_file() and not extracted.is_symlink(),
+                "ar did not extract a regular provider object")
+        require(extracted.read_bytes() == expected, "ar/parser extracted object disagreement")
+        return extracted
+
 
 def included_headers(preprocessed: str) -> list[Path]:
     paths = set()
@@ -476,12 +488,9 @@ def native_prepare(prep: Preparation, cxx: Path) -> None:
         payload = dict(before)[provider]
         require(len(payload) >= 20 and struct.unpack_from("<H", payload)[0] == 0x8664,
                 "Original thread provider is not a regular AMD64 COFF object")
-        extracted = prep.run(f"original-{name}-extract", [tools["ar"], "p", original, provider])
-        require(extracted == payload, "ar/parser extracted object disagreement")
         object_dir = objects / "original" / name
-        object_dir.mkdir(parents=True)
-        original_obj = object_dir / provider
-        original_obj.write_bytes(payload)
+        original_obj = prep.extract_archive_member(original, f"original-{name}-extract", tools["ar"],
+                                                   provider, payload, object_dir)
         definitions = prep.run(f"original-{name}-defined", [tools["nm"], "-P", "-g", "--defined-only", original_obj])
         original_symbols = parse_object_nm(definitions.decode())
         require(original_symbols == rebuilt_symbols["rebuilt-baseline"],

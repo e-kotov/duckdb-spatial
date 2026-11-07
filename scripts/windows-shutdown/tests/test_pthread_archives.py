@@ -107,6 +107,43 @@ class ArchiveIsolationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             prep.reverse_source(b"void _pthread_cleanup_dest(void) {}\n")
 
+    @unittest.skipUnless(shutil.which("ar"), "Host ar required for real binary extraction")
+    def test_real_archive_extraction_preserves_every_binary_byte(self):
+        payload = bytes(range(256)) * 3 + b"\n\x00\r\n\r\r\n\x1a"
+        original = archive([("thread.o/", payload), ("other.o/", b"untouched")])
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            source = work / "original.a"
+            source.write_bytes(original)
+            output = work / "output"
+            output.mkdir()
+            preparation = prep.Preparation(output)
+            directory = output / "objects"
+            extracted = preparation.extract_archive_member(
+                source, "extract", Path(shutil.which("ar")), "thread.o", payload, directory)
+            self.assertEqual(extracted.read_bytes(), payload)
+            self.assertEqual(set(directory.iterdir()), {extracted})
+            self.assertEqual(source.read_bytes(), original)
+
+    @unittest.skipUnless(shutil.which("ar"), "Host ar required for real binary extraction")
+    def test_real_extraction_rejects_disagreement_without_normalizing_bytes(self):
+        payload = b"binary\x00\n\r\n\r\r\n\x1a"
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            source = work / "original.a"
+            source.write_bytes(archive([("thread.o/", payload)]))
+            output = work / "output"
+            output.mkdir()
+            preparation = prep.Preparation(output)
+            for index, incorrect in enumerate((payload.replace(b"\n", b"\r\n"), payload + b"x")):
+                directory = output / f"objects-{index}"
+                with self.subTest(expected=incorrect), self.assertRaisesRegex(
+                        ValueError, "ar/parser extracted object disagreement"):
+                    preparation.extract_archive_member(source, f"extract-{index}",
+                                                       Path(shutil.which("ar")), "thread.o",
+                                                       incorrect, directory)
+                self.assertEqual((directory / "thread.o").read_bytes(), payload)
+
     @unittest.skipUnless(all(shutil.which(name) for name in ("cc", "ar", "nm")),
                          "Host toolchain required for portable real-archive roundtrip")
     def test_real_host_archive_selection_and_member_preservation(self):
