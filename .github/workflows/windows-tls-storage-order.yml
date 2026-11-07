@@ -1,0 +1,182 @@
+name: Windows TLS storage ordering experiment
+
+# A successful diagnostic can include deliberately reproduced software failures.
+# This workflow does not build a production extension or install a runtime patch.
+on:
+  push:
+    branches: [test/windows-tls-storage-order-20261107]
+    paths:
+      - '.github/workflows/windows-tls-storage-order.yml'
+      - 'scripts/windows-shutdown/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-tls-storage-order-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare-order:
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    name: Original, rebuilt and reverse-order private pthread archives
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 35
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Check out the bounded runtime experiment
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+          submodules: false
+          persist-credentials: false
+
+      - name: Preserve all fixture sources and run identity before setup
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $output = 'build/windows-tls-storage-order'
+          New-Item -ItemType Directory -Force -Path "$output/source" | Out-Null
+          Copy-Item 'scripts/windows-shutdown' "$output/source" -Recurse
+          Copy-Item '.github/workflows/windows-tls-storage-order.yml' "$output/source"
+          @{
+            repository = $env:GITHUB_REPOSITORY
+            ref = $env:GITHUB_REF
+            commit = $env:GITHUB_SHA
+            run_id = $env:GITHUB_RUN_ID
+            run_attempt = $env:GITHUB_RUN_ATTEMPT
+            runner_os = $env:RUNNER_OS
+            runner_image = $env:ImageOS
+            runner_image_version = $env:ImageVersion
+          } | ConvertTo-Json | Set-Content "$output/run-context.json"
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      - name: Set up the same Rtools 42 compiler
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
+        with:
+          r-version: '4.6.2'
+          rtools-version: '42'
+          update-rtools: true
+
+      - name: Match compiler discovery and install the validation dependency
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'C:/rtools42/x86_64-w64-mingw32.static.posix/bin'
+          foreach ($name in @('gcc', 'g++', 'gfortran')) {
+            Copy-Item "$root/$name.exe" "$root/x86_64-w64-mingw32-$name.exe" -Force
+          }
+          $cxx = (Get-Command g++ -ErrorAction Stop).Source
+          $version = & $cxx -dumpfullversion
+          if ($LASTEXITCODE -ne 0 -or $version.Trim() -ne '10.4.0') {
+            throw 'Expected original GCC 10.4.0'
+          }
+          "SPATIAL_TEST_CXX=$cxx" >> $env:GITHUB_ENV
+          @("compiler=$cxx", "version=$version") | Set-Content 'build/windows-tls-storage-order/compiler.txt'
+          python -m pip install psutil==7.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Validation dependency installation failed' }
+
+      - name: Verify fail-closed observation and archive-selection checks
+        run: |
+          python -m unittest discover -s scripts/windows-shutdown/tests -v
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -m unittest discover -s scripts/windows-shutdown -p 'test_*.py' -v
+          exit $LASTEXITCODE
+
+      - name: Prepare the original GCC inputs and unchanged shutdown guard
+        run: |
+          python scripts/windows-shutdown/prepare_runtime.py --output build/windows-tls-storage-order/runtime
+          exit $LASTEXITCODE
+
+      - name: Prepare three isolated pthread archive families and verify their ABI
+        timeout-minutes: 10
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python scripts/windows-shutdown/prepare_pthread_archives.py `
+            --cxx "$env:SPATIAL_TEST_CXX" --output build/windows-tls-storage-order/pthread
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $manifest = Get-Content 'build/windows-tls-storage-order/pthread/manifest.json' -Raw | ConvertFrom-Json
+          if ($manifest.status -ne 'prepared' -or $manifest.native_preparation_passed -ne $true `
+              -or $manifest.installed_inputs_unchanged -ne $true) {
+            throw 'Native preparation and immutable installed-input checks must actually pass'
+          }
+
+      - name: Collect every ordering observation and regular cleanup control
+        timeout-minutes: 15
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $false
+          $output = 'build/windows-tls-storage-order'
+          $results = @()
+          foreach ($arm in @('original', 'rebuilt-baseline', 'reverse-order')) {
+            $expected = if ($arm -eq 'reverse-order') { 'callback-first' } else { 'storage-first' }
+            $library = "$output/pthread/$arm/lib"
+            python scripts/windows-shutdown/run_tls_storage_order.py `
+              --cxx "$env:SPATIAL_TEST_CXX" `
+              --baseline-runtime-source "$output/runtime/baseline.cc" `
+              --guarded-runtime-source "$output/runtime/guarded.cc" `
+              --pthread-library-dir "$library" --expected-order "$expected" `
+              --output-dir "$output/observations/$arm" --timeout 30
+            $orderExit = $LASTEXITCODE
+            python scripts/windows-shutdown/run_runtime.py `
+              --cxx "$env:SPATIAL_TEST_CXX" `
+              --baseline-runtime-source "$output/runtime/baseline.cc" `
+              --guarded-runtime-source "$output/runtime/guarded.cc" `
+              --pthread-library-dir "$library" `
+              --output-dir "$output/cleanup/$arm" --timeout 10 --cycles 16 --workers 8
+            $cleanupExit = $LASTEXITCODE
+            $record = [ordered]@{
+              pthread_arm = $arm
+              expected_storage_order = $expected
+              storage_driver_exit = $orderExit
+              cleanup_driver_exit = $cleanupExit
+              diagnostic_expectation_met = $false
+            }
+            try {
+              $order = Get-Content "$output/observations/$arm/summary.json" -Raw | ConvertFrom-Json
+              $cleanup = Get-Content "$output/cleanup/$arm/summary.json" -Raw | ConvertFrom-Json
+              $record.storage_cases = @($order.results).Count
+              $record.storage_contract_passes = @($order.results | Where-Object { $_.storage_lifetime_contract_passed -eq $true }).Count
+              $record.storage_contract_failures = @($order.results | Where-Object { $_.storage_lifetime_contract_passed -eq $false }).Count
+              $record.cleanup_cases = @($cleanup.results).Count
+              $record.cleanup_software_passes = @($cleanup.results | Where-Object { $_.software_exit_passed -eq $true }).Count
+              $record.cleanup_reproduced_hangs = @($cleanup.results | Where-Object { $_.classification -eq 'expected-diagnostic-hang' -and $_.software_exit_passed -eq $false }).Count
+              $expectedPasses = if ($arm -eq 'reverse-order') { 6 } else { 0 }
+              $record.diagnostic_expectation_met = (
+                $orderExit -eq 0 -and $cleanupExit -eq 0 `
+                -and $order.diagnostic_expectation_met -eq $true `
+                -and $cleanup.candidate_validated_for_runtime_fixture -eq $true `
+                -and $record.storage_cases -eq 6 -and $record.cleanup_cases -eq 12 `
+                -and $record.storage_contract_passes -eq $expectedPasses `
+                -and $record.storage_contract_failures -eq (6 - $expectedPasses) `
+                -and $record.cleanup_software_passes -eq 10 -and $record.cleanup_reproduced_hangs -eq 2)
+            } catch {
+              $record.assessment_error = $_.Exception.Message
+            }
+            $results += $record
+            $results | ConvertTo-Json -Depth 8 | Set-Content "$output/comparison.json"
+          }
+          $passed = @($results | Where-Object { $_.diagnostic_expectation_met -eq $true }).Count -eq 3
+          @{
+            diagnostic_expectation_met = $passed
+            spatial_workload_assessed = $false
+            all_software_exits_passed = $false
+            all_storage_contracts_passed = $false
+            interpretation = 'Expected old ordering failures and deliberate baseline hangs remain failed software/lifetime outcomes.'
+            results = $results
+          } | ConvertTo-Json -Depth 8 | Set-Content "$output/verdict.json"
+          if (-not $passed) { exit 1 }
+
+      - name: Preserve exact sources, private archives, objects, maps and outcomes
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-tls-storage-order-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/windows-tls-storage-order
+          if-no-files-found: error
+          retention-days: 90

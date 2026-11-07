@@ -172,6 +172,8 @@ def main() -> int:
     parser.add_argument("--baseline-runtime-source", type=Path, required=True)
     parser.add_argument("--guarded-runtime-source", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--pthread-library-dir", type=Path,
+                        help="Optional private directory containing libpthread.a and libwinpthread.a")
     parser.add_argument("--expected-compiler-version", default="10.4.0")
     parser.add_argument("--timeout", type=float, default=10)
     parser.add_argument("--cycles", type=int, default=16)
@@ -210,6 +212,18 @@ def main() -> int:
         (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
 
     try:
+        library_options = []
+        private_archives = {}
+        if args.pthread_library_dir:
+            # Keep the original entry point independent of this optional
+            # side-experiment helper when no private archive is requested.
+            from pthread_provenance import isolated_pthread_archives, pthread_link_proof
+            private_directory = args.pthread_library_dir.resolve(strict=True)
+            private_archives = isolated_pthread_archives(private_directory)
+            library_options = [f"-L{private_directory}"]
+            summary["selected_pthread_library_dir"] = str(private_directory)
+            helper = Path(__file__).resolve().parent / "pthread_provenance.py"
+            summary["source_sha256"][str(helper)] = digest(helper)
         cxx_found = shutil.which(args.cxx)
         if not cxx_found:
             raise RuntimeError(f"Compiler not found: {args.cxx}")
@@ -229,12 +243,14 @@ def main() -> int:
         summary["compiler_binary"] = {"path": cxx, "sha256": digest(Path(cxx))}
         summary["thread_runtime_archives"] = {}
         for library_name in ("libpthread.a", "libwinpthread.a"):
-            identified = command([cxx, f"-print-file-name={library_name}"], output=output,
+            identified = command([cxx, *library_options, f"-print-file-name={library_name}"], output=output,
                                  stem=f"compiler-{library_name}")
             summary["compiler_commands"].append(identified)
             if identified["returncode"] != 0:
                 raise RuntimeError(f"Could not identify {library_name}")
             library_path = Path(identified["stdout"].strip()).resolve(strict=True)
+            if private_archives and library_path != private_archives[library_name]:
+                raise RuntimeError(f"Compiler selected {library_name} outside the isolated directory")
             summary["thread_runtime_archives"][library_name] = {
                 "path": str(library_path), "sha256": digest(library_path),
             }
@@ -245,7 +261,7 @@ def main() -> int:
 
         host = output / "runtime-host.exe"
         build_host = command([
-            cxx, "-x", "c", "-std=c11", "-O0", "-g", "-Wall", "-Wextra", "-static",
+            cxx, *library_options, "-x", "c", "-std=c11", "-O0", "-g", "-Wall", "-Wextra", "-static",
             str(fixture / "host.c"), "-o", str(host),
         ], output=output, stem="build-host")
         summary["builds"].append({"variant": "host", **build_host})
@@ -267,7 +283,7 @@ def main() -> int:
             dll = output / f"runtime-{variant}.dll"
             link_map = output / f"runtime-{variant}.map"
             argv = [
-                cxx, "-std=c++11", "-O0", "-g", "-Wall", "-Wextra", "-pthread",
+                cxx, *library_options, "-std=c++11", "-O0", "-g", "-Wall", "-Wextra", "-pthread",
                 "-shared", "-static", "-static-libgcc", "-static-libstdc++",
                 str(fixture_object),
             ]
@@ -306,10 +322,27 @@ def main() -> int:
                 "passed": symbols["returncode"] == 0 and len(definitions) == 1 and
                 archive_fallback == (variant == "archive") and selected_object,
             }
+            if private_archives:
+                thread_proof = pthread_link_proof(
+                    map_text, symbols["stdout"],
+                    [record["path"] for record in summary["thread_runtime_archives"].values()],
+                )
+                proof["private_pthread_proof"] = thread_proof
+                proof["passed"] = proof["passed"] and thread_proof["passed"]
             summary["link_proofs"][variant] = proof
             if not proof["passed"]:
                 raise RuntimeError(f"{variant}: cannot prove which fallback implementation was linked")
         summary["binary_sha256"] = {str(path): digest(path) for path in (host, *dlls.values())}
+        if private_archives:
+            summary["thread_runtime_archives_after_linking"] = {
+                name: {"path": record["path"], "sha256": digest(Path(record["path"]))}
+                for name, record in summary["thread_runtime_archives"].items()
+            }
+            summary["selected_pthread_archives_unchanged_after_linking"] = (
+                summary["thread_runtime_archives_after_linking"] == summary["thread_runtime_archives"]
+            )
+            if not summary["selected_pthread_archives_unchanged_after_linking"]:
+                raise RuntimeError("A selected pthread archive changed during the comparison build")
         save()
 
         for mode in ("unload", "foreign-unload", "main-exit", "abandoned-reader"):
@@ -328,6 +361,16 @@ def main() -> int:
                 save()
                 print(f"{variant}/{mode}: {assessed['classification']} "
                       f"({result['elapsed_seconds']:.3f}s)", flush=True)
+        if private_archives:
+            summary["thread_runtime_archives_after"] = {
+                name: {"path": record["path"], "sha256": digest(Path(record["path"]))}
+                for name, record in summary["thread_runtime_archives"].items()
+            }
+            summary["selected_pthread_archives_unchanged_after_execution"] = (
+                summary["thread_runtime_archives_after"] == summary["thread_runtime_archives"]
+            )
+            if not summary["selected_pthread_archives_unchanged_after_execution"]:
+                raise RuntimeError("A selected pthread archive changed during the native cases")
         summary["candidate_validated_for_runtime_fixture"] = (
             len(summary["results"]) == 12 and
             all(result["experiment_expectation_met"] for result in summary["results"])
