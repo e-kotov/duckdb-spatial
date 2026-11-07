@@ -13,12 +13,12 @@ runs produced 90 normal default-thread exits in 90 guarded attempts, plus all
 continued to hang. A separate native lifetime probe establishes that the guard
 does not fix the old emulated-TLS storage/destructor ordering defect.
 
-The next actual-Spatial comparison varies that ordering change separately
-from the guard. A further native probe has now confirmed that the two-line
-ordering backport introduces an unsafe lifetime order under a valid pthread
-key-reuse history. It is not a general production solution. Neither a green
-diagnostic workflow nor the absence of hangs in a bounded sample establishes
-universal cleanup safety.
+The completed six-arm actual-Spatial comparison isolates the ordering and
+shutdown-guard changes: each suppresses the observed R quit hangs in its tested
+configuration, while both baselines still hang. A separate native key-reuse
+probe proves the two-line numeric-order backport has an unsafe lifetime order
+under valid key reuse. Thus successful R exits do not make either intervention
+a complete runtime-safety fix or justify production submission.
 
 The original vanished reader remains unidentified. New R hangs have the
 original post-quit phenotype, but new native wait stacks were not captured.
@@ -232,14 +232,73 @@ tests while separating two candidate changes:
 | `combined` | Reverse numeric key order | Final-shutdown guard |
 | `order-only-archive` | Reverse numeric key order | Original archive member |
 
-The run passed its Windows self-tests and all 54 native preflight expectations
-and entered the six actual Spatial builds and R/SQL comparisons. **Actual
-Spatial outcomes remain pending.** The gate requires both original and rebuilt
-baselines to reproduce, rather than accepting a non-reproducing control. For a
-candidate to be supported, every R/control/smoke process in its required arm or
-arms must exit normally without forced cleanup. Negative-candidate hangs
-remain failed software outcomes. The exact loaded binary and every unchanged
-SQL test are checked.
+The run **completed successfully** on 7 November 2026, at the exact
+`bf3256b770c8a5d7924a2eb97a0ce085ec258071` workflow head, and its
+retained raw evidence passed a separate independent file/record audit. The
+archive's historical verdict remains `supported-six-arm-comparison` with
+`supported_ordering_only=true`, `supported_combination=true`,
+`ready_for_upstream_submission=false`, and no claim of a complete fix.
+
+| Arm | Default R normal exits / 30 | Default quit hangs / 30 | Single-thread / 5 | Separate smoke | SQL process |
+| --- | ---: | ---: | --- | --- | --- |
+| `original` | 10 | **20** | 5/5 normal | **Quit hang** | Exit 0 |
+| `rebuilt-control` | 15 | **15** | 5/5 normal | Normal | Exit 0 |
+| `order-only` | **30** | 0 | 5/5 normal | Normal | Exit 0 |
+| `guard-only` | **30** | 0 | 5/5 normal | Normal | Exit 0 |
+| `combined` | **30** | 0 | 5/5 normal | Normal | Exit 0 |
+| `order-only-archive` | **30** | 0 | 5/5 normal | Normal | Exit 0 |
+
+All **216** planned individual R processes were inspected: 180 default-thread
+attempts (four recorded threads), 30 one-thread controls, six separate
+smokes. The two baseline arms contributed **35 default quit hangs plus one
+original-archive smoke hang**, all recorded as failed software exits and
+supervisor-terminated. The four candidate arms supplied **144/144 unforced
+normal exits** and successful installed-DLL-copy removal. Across all six arms,
+180 R processes exited normally and 36 were forcibly terminated. The 36
+forced baseline cases report installed-copy `AccessDenied`; no post-kill
+descendant census was retained, so successful complete teardown is unproved.
+
+All six actual SQL suites exited zero and each retained 34 original/provenance
+file results, 68 begin/end events, 130 passing statements and 201 Catch
+assertions, without skips or failures. All 33 upstream SQL sources were
+checked as unchanged (including the existing empty `geos/equals.test`).
+The pinned reproducer's three GeoJSON/Shapefile iterations, data checks,
+extension-load hashes, owned cleanup, garbage collection and zero-status
+quit checkpoints remain present in every R process.
+
+**Artifact provenance:** final artifact ID `13589715624`, **344,410,864 bytes**,
+**3,319 ZIP members**, SHA-256
+`86d023f647790307f88483e20c75827e85cf06cd447c2f387f5f7655da4fdbf3`.
+Its API run/head match the committed experiment; its ZIP CRCs, safe extraction
+and every payload hash were independently checked. The early native artifact
+`13584960803` (9,196,621 bytes; SHA-256
+`e497a0cd7f061401e217408642cd94206085f166b97fdf988f9d839a58592851`)
+was verified separately and its **807 files** matched the final artifact
+byte-for-byte. This permits reuse of the already independently audited 54
+native cases, **not** reclassification of the six deliberately induced native
+hangs as passing software exits.
+
+Independent raw review inspected 32 pinned experiment Git blobs, all 33
+upstream SQL source blobs, 203 unchanged live installed-input records,
+195 retained headers, six private pthread archives and 78 archive members,
+all six retained DLLs and their actual PE symbol providers, 216 raw supervisor
+records, loaded-extension CSVs, checkpoint markers, and all six SQL logs.
+The published pinned final Python audit driver **was not independently
+executed** in the reprovisioned environment; this was a separate,
+read-only raw-evidence audit. Eight installed tool binaries, non-retained
+installed GCC archives and `unittest.exe` were not rehashed offline;
+only their live Windows records were retained. No fresh native wait stacks
+were captured for these R hangs. The complete reviewed results and these
+scope limits are recorded in
+[the independent review](windows-shutdown-audit/windows-pthread-spatial-independent-review-42398571027.md).
+
+**Fix decision:** both numeric ordering-only variants and the GCC guard-only
+variant suppress this workload's shutdown hang, but neither is a general
+cleanup-safe fix. The separate key-reuse test below disproves safety of this
+specific numeric-order backport under reused keys, including for the combined
+arm. The guard does not correct TLS object-storage lifetime. The identity
+of the original abandoned reader is still unknown. No upstream submission
+is justified by this experiment alone.
 
 The previous setup attempt,
 [42398051324](https://github.com/e-kotov/duckdb-spatial/actions/runs/42398051324)
@@ -304,11 +363,13 @@ This is a reproduced counterexample for the exact tested v9 backport, not a
 claim that every later MinGW release has been tested. It does not establish
 that key reuse occurred in the original R process.
 
-The six-arm R comparison remains valuable for discriminating the actual hang,
-but even a positive ordering-only result would not make this backport a general
-cleanup-safe production recommendation. The shutdown guard remains a separate,
-supported final-key-deletion intervention; it changes neither storage release
-nor thread callback order and cannot repair this lifetime defect.
+The completed six-arm R comparison now demonstrates suppression of the actual
+R quit-hang phenotype by both ordering-only and guard-only variants.
+Nevertheless, the reproduced key-reuse counterexample rules out this numeric
+backport as a general cleanup-safe production recommendation, independently of
+its bounded R success. The shutdown guard remains a separate final-key-deletion
+intervention; it changes neither storage release nor callback order and cannot
+repair this lifetime defect.
 
 The production delivery question remains in GCC/MinGW runtime coordination and
 the toolchain selected by DuckDB extension build infrastructure. A full private
