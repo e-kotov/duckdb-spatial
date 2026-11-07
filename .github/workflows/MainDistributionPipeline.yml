@@ -35,6 +35,8 @@ jobs:
 
   duckdb-latest-deploy:
     name: Deploy extension binaries
+    # Fork experiments build and test without entering release deployment.
+    if: github.repository == 'duckdb/duckdb-spatial'
     needs: duckdb-latest-build
     uses: duckdb/extension-ci-tools/.github/workflows/_extension_deploy.yml@969bc76276acec1c0a3922ff500d2ec3a1a3b037 # v2.0-cyanoptera 2026-10-01 pin
     secrets: inherit

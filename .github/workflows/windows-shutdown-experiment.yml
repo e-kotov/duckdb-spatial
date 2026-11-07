@@ -1,0 +1,189 @@
+name: Windows Spatial shutdown experiment
+
+# This separate, narrowly triggered workflow leaves the ordinary distribution
+# workflow unchanged. Its conclusion is an A/B experiment verdict; it never
+# relabels a hung upstream process as a passing software test.
+on:
+  push:
+    branches: [fix/windows-tls-key-shutdown-20261107]
+    paths:
+      - 'CMakeLists.txt'
+      - 'scripts/windows-shutdown/**'
+      - '.github/workflows/windows-shutdown-experiment.yml'
+  workflow_dispatch:
+    inputs:
+      attempts:
+        description: Fresh R processes per arm with the default DuckDB thread count
+        type: number
+        default: 30
+        required: true
+      control_attempts:
+        description: Fresh single-thread control processes per arm
+        type: number
+        default: 5
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-shutdown-experiment-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: github.repository == 'e-kotov/duckdb-spatial'
+    name: Original archive, rebuilt baseline and guarded runtime on Windows
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      CC: gcc
+      CXX: g++
+      GEN: ninja
+      # This is the exact source commit behind the v2.0.0 release tag.
+      DUCKDB_COMMIT: d54cbbe3df17e8e5ce68312f483b4155836112aa
+      DUCKDB_VERSION: v2.0.0
+      DUCKDB_PLATFORM: windows_amd64_mingw
+      DUCKDB_PLATFORM_RTOOLS: '1'
+      ENABLE_EXTENSION_AUTOINSTALL: '1'
+      ENABLE_EXTENSION_AUTOLOADING: '1'
+      VCPKG_TARGET_TRIPLET: x64-mingw-static
+      VCPKG_HOST_TRIPLET: x64-mingw-static
+      VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-cache.duckdb.org,read
+      VCPKG_OVERLAY_PORTS: ${{ github.workspace }}/extension-ci-tools/vcpkg_ports
+      CMAKE_BUILD_PARALLEL_LEVEL: '4'
+      EXPERIMENT_ATTEMPTS: ${{ inputs.attempts || 30 }}
+      EXPERIMENT_CONTROL_ATTEMPTS: ${{ inputs.control_attempts || 5 }}
+
+    steps:
+      - name: Check out the experiment and original pinned submodules
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+
+      # Match upstream ordering: Rtools' curl/zstd can disrupt ccache setup.
+      - name: Set up compiler cache
+        uses: hendrikmuhs/ccache-action@d62db5f07c26379fc4b4e0916f098a92573c3b03 # v1.2.23
+        with:
+          max-size: 5GB
+          evict-old-files: job
+          key: spatial-shutdown-rtools42-v1
+
+      - name: Set up the reproduced R host and the original Rtools 42 compiler
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2.12.1
+        with:
+          r-version: '4.6.2'
+          rtools-version: '42'
+          update-rtools: true
+
+      - name: Match upstream compiler discovery and short vcpkg path
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = 'C:/rtools42/x86_64-w64-mingw32.static.posix/bin'
+          foreach ($name in @('gcc', 'g++', 'gfortran')) {
+            Copy-Item "$root/$name.exe" "$root/x86_64-w64-mingw32-$name.exe" -Force
+          }
+          if (Test-Path 'C:/rtools42/usr/bin/zstd.exe') {
+            Move-Item 'C:/rtools42/usr/bin/zstd.exe' 'C:/rtools42/usr/bin/zstd-rtools.exe' -Force
+          }
+          $cxx = (Get-Command g++ -ErrorAction Stop).Source
+          if ((& $cxx -dumpfullversion).Trim() -ne '10.4.0') { throw 'Expected original GCC 10.4.0' }
+          "SPATIAL_TEST_CXX=$cxx" >> $env:GITHUB_ENV
+          $base = Split-Path (Split-Path $env:GITHUB_WORKSPACE -Parent) -Parent
+          $vcpkg = "$base/vcpkg"
+          "VCPKG_ROOT=$vcpkg" >> $env:GITHUB_ENV
+          "VCPKG_TOOLCHAIN_PATH=$vcpkg/scripts/buildsystems/vcpkg.cmake" >> $env:GITHUB_ENV
+          choco install ninja -y
+          if ($LASTEXITCODE -ne 0) { throw 'Ninja installation failed' }
+          python -m pip install psutil==7.0.0
+          if ($LASTEXITCODE -ne 0) { throw 'Process inspection helper installation failed' }
+
+      - name: Set up the original pinned vcpkg dependency build
+        uses: lukka/run-vcpkg@b1a0dd252f06b9e25b3c022a9a03bd7a427fb6a2 # v11.6
+        with:
+          vcpkgGitCommitId: cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3
+          vcpkgDirectory: ${{ env.VCPKG_ROOT }}
+
+      - name: Install and verify the reproduced R package versions
+        shell: Rscript {0}
+        run: |
+          stopifnot(as.character(getRversion()) == '4.6.2')
+          install.packages(c('DBI', 'duckdb'), repos = 'https://cloud.r-project.org', type = 'binary')
+          stopifnot(as.character(packageVersion('DBI')) == '1.3.0')
+          stopifnot(as.character(packageVersion('duckdb')) == '2.0.0')
+          dir.create('build/windows-shutdown', recursive = TRUE, showWarnings = FALSE)
+          writeLines(capture.output(sessionInfo()), 'build/windows-shutdown/r-session.txt')
+          dlls <- list.files(system.file('libs', package = 'duckdb'), full.names = TRUE,
+                             recursive = TRUE, pattern = '\\.dll$')
+          write.csv(data.frame(path = dlls, md5 = unname(tools::md5sum(dlls))),
+                    'build/windows-shutdown/r-duckdb-binaries.csv', row.names = FALSE)
+
+      - name: Check that validation rejects incomplete and failing outcomes
+        run: |
+          python -m unittest discover -s scripts/windows-shutdown/tests -v
+          exit $LASTEXITCODE
+
+      - name: Prepare immutable reproducer inputs and the two runtime sources
+        run: |
+          python scripts/windows-shutdown/prepare_runtime.py --output build/windows-shutdown/runtime
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify normal cleanup contracts and the deterministic native failure
+        timeout-minutes: 10
+        run: |
+          python scripts/windows-shutdown/run_runtime.py `
+            --cxx "$env:SPATIAL_TEST_CXX" `
+            --baseline-runtime-source build/windows-shutdown/runtime/baseline.cc `
+            --guarded-runtime-source build/windows-shutdown/runtime/guarded.cc `
+            --output-dir build/windows-shutdown/native `
+            --timeout 10 --cycles 16 --workers 8
+          exit $LASTEXITCODE
+
+      - name: Publish native cleanup evidence before the long Spatial comparison
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-shutdown-native-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/windows-shutdown/runtime
+            build/windows-shutdown/native
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Build all three arms and collect their actual software-test outcomes
+        timeout-minutes: 150
+        run: |
+          ./scripts/windows-shutdown/build_and_test.ps1 `
+            -RuntimeSources build/windows-shutdown/runtime `
+            -OutputDirectory build/windows-shutdown `
+            -Attempts ([int]$env:EXPERIMENT_ATTEMPTS) `
+            -ControlAttempts ([int]$env:EXPERIMENT_CONTROL_ATTEMPTS)
+          exit $LASTEXITCODE
+
+      - name: Assess the comparison without concealing baseline test failures
+        if: always()
+        run: |
+          python scripts/windows-shutdown/assess_experiment.py --root build/windows-shutdown
+          exit $LASTEXITCODE
+
+      - name: Preserve exact binaries, source patch, maps and every test outcome
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-shutdown-experiment-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            build/windows-shutdown
+            !build/windows-shutdown/**/extensions/**
+            !build/windows-shutdown/**/inst/spatial/countries.geojson
+          if-no-files-found: error
+          retention-days: 90

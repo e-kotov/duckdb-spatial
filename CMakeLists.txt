@@ -103,6 +103,36 @@ build_loadable_extension(${TARGET_NAME} ${PARAMETERS} ${EXTENSION_SOURCES})
 target_link_libraries(${TARGET_NAME}_loadable_extension
                       ${EXTENSION_DEPENDENCIES})
 
+# Opt-in experiment only. An empty value keeps the upstream runtime/link path.
+# The supplied source replaces libstdc++'s atexit_thread.o in this DLL, not in
+# DuckDB, the static extension, other extensions, or the installed toolchain.
+set(SPATIAL_MINGW_TLS_ATEXIT_SOURCE "" CACHE FILEPATH
+    "Experimental GCC 10.4 C++ TLS cleanup source for the MinGW Spatial DLL")
+if(SPATIAL_MINGW_TLS_ATEXIT_SOURCE)
+  if(NOT MINGW OR NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR
+     NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL "10.4.0")
+    message(FATAL_ERROR "The TLS cleanup experiment requires MinGW GCC 10.4.0")
+  endif()
+  get_filename_component(SPATIAL_MINGW_TLS_ATEXIT_SOURCE
+                         "${SPATIAL_MINGW_TLS_ATEXIT_SOURCE}" ABSOLUTE)
+  if(NOT EXISTS "${SPATIAL_MINGW_TLS_ATEXIT_SOURCE}")
+    message(FATAL_ERROR "Experimental TLS cleanup source does not exist")
+  endif()
+  target_sources(${TARGET_NAME}_loadable_extension
+                 PRIVATE "${SPATIAL_MINGW_TLS_ATEXIT_SOURCE}")
+endif()
+
+# A link map proves which runtime object supplies __cxa_thread_atexit in each
+# experimental arm, including the untouched archive arm. No default link flags.
+set(SPATIAL_MINGW_LINK_MAP "" CACHE FILEPATH "Optional MinGW runtime experiment link map")
+if(SPATIAL_MINGW_LINK_MAP)
+  if(NOT MINGW)
+    message(FATAL_ERROR "SPATIAL_MINGW_LINK_MAP requires MinGW")
+  endif()
+  set_property(TARGET ${TARGET_NAME}_loadable_extension APPEND_STRING PROPERTY
+               LINK_FLAGS " -Wl,-Map,\"${SPATIAL_MINGW_LINK_MAP}\"")
+endif()
+
 install(
   TARGETS ${EXTENSION_NAME}
   EXPORT "${DUCKDB_EXPORT_SET}"
