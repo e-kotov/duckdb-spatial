@@ -35,7 +35,8 @@ class PreparationChecks(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
-        self.work = Path(temporary.name)
+        # Windows TEMP can contain an 8.3 alias; preparation records canonical paths.
+        self.work = Path(temporary.name).resolve(strict=True)
         self.root = self.work / "prepared"
         self.root.mkdir()
         installed = self.work / "installed"
